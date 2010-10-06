@@ -27,8 +27,8 @@ dbframe <- function(dbc, table, data = NULL,...) {
       ## otherwise, create the table from scratch
       dbWriteTable(db(x), sql(x), data, row.names = FALSE,...)
     }
-    return(x)
   }
+  x
 }
 
 print.dbview <- function(x,...) {
