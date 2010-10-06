@@ -20,6 +20,7 @@ select name from sqlite_master where type='index';"))$name
   dbSendQuery(db(x), paste("create unique index", indexname, "on",
                            sql(x),"(", paste(value, collapse = ","),
                            ");"))
+  x
 }
 
 index <- function(x) {
