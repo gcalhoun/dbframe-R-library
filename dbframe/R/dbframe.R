@@ -31,14 +31,6 @@ dbframe <- function(dbc, table, data = NULL,...) {
   x
 }
 
-print.dbview <- function(x,...) {
-  print("dbview object; first 5 rows:")
-  print(query(x, "select * from %s limit 5"))
-}
-print.dbframe <- function(x,...) {
-  print("dbframe object; first 5 rows:")
-  print(query(x, "select * from %s limit 5"))
-}
 
 as.data.frame.dbview <- function(x,...) {
   as.data.frame(query(x),...)
