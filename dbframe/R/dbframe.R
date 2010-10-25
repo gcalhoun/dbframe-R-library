@@ -6,26 +6,41 @@ setClass("dbframe", contains = "dbview")
 db <- function(x,...) x@db
 sql <- function(x,...) x@sql
 
-dbview <- function(dbc, sql,...) {
-  new("dbview", db = dbc, sql = sql)  
+dbview <- function(dbc, sql, cache = FALSE,...) {
+  new("dbview", db = dbc, sql = sql)
 }
 
-dbframe <- function(dbc, table, data = NULL,...) {
+dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE, ...) {
+  ## The defaults for cache and temp are basically chosen for
+  ## consistency across the different possibilities for 'data'.  Once
+  ## I figure out how to do temporary frames when data is a
+  ## data.frame, I should change 'temp' to be TRUE by default.
   x <- new("dbframe", db = dbc, sql = table)
   if (!is.null(data)) {
-    data <- as.data.frame(data)
-    if (tolower(table) %in% tolower(dbListTables(db(x)))) {
-      ## If the table exists, add the columns of the data.frame that
-      ## already exist in the database.  I'm not sure that this is the
-      ## best way to handle this case.
-      tablenames <- names(query(x, "select * from %s limit 0"))
-      dbWriteTable(db(x), sql(x),
-                   data[, tablenames[tablenames
-                                     %in% names(data)], drop=FALSE],
-                   row.names = FALSE,...)
+    if (is.character(data)) {
+      ## if data is a character, we assume that it contains sql
+      ## commands specifying a query.
+      frametype <- if (cache) {"table"} else {"view"}
+      createsql <- if (temp) {"create temporary"} else {"create"}
+      dbClearResult(dbSendQuery(dbc,
+        paste(createsql, frametype, table, "as", data)))
     } else {
-      ## otherwise, create the table from scratch
-      dbWriteTable(db(x), sql(x), data, row.names = FALSE,...)
+      if (temp) warning("Temporary tables are not implemented for this data.")
+      if (!cache) warning("Data exported from R must be cached")
+      data <- as.data.frame(data)
+      if (tolower(table) %in% tolower(dbListTables(db(x)))) {
+        ## If the table exists, add the columns of the data.frame that
+        ## already exist in the database.  I'm not sure that this is
+        ## the best way to handle this case.
+        tablenames <- names(query(x, "select * from %s limit 0"))
+        dbWriteTable(db(x), sql(x),
+                     data[, tablenames[tablenames
+                                       %in% names(data)], drop=FALSE],
+                     row.names = FALSE,...)
+      } else {
+        ## otherwise, create the table from scratch
+        dbWriteTable(db(x), sql(x), data, row.names = FALSE,...)
+      }
     }
   }
   x
