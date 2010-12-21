@@ -1,20 +1,16 @@
-select <- function(x, select = "*", where = NULL, group.by = NULL, having = NULL,...) {
-  if (is.null(group.by)) {
-    group.by <- ""
+select <- function(x, select = "*", where = NULL, group.by = NULL,
+                   having = NULL, limit = NULL, ...) {
+  select   <- if (is.null(group.by)) {
+    paste(select, collapse = ", ")
   } else {
-    select <- paste(group.by, select, sep = ",")
-    group.by <- paste("group by", group.by)
+    paste(c(group.by, select), collapse = ", ")
   }
-  if (is.null(having)) {
-    having <- ""
-  } else {
-    having <- paste("having", having)
+  group.by <- if (is.null(group.by)) "" else {
+    paste("group by", paste(group.by, collapse = ", "))
   }
-  if (is.null(where)) {
-    where <- ""
-  } else {
-    where <- paste("where", where)
-  }
+  having   <- if (is.null(having))   "" else paste("having", having)
+  where    <- if (is.null(where))    "" else paste("where", where)
+  limit    <- if (is.null(limit))    "" else paste("limit", limit)
   dbGetQuery(db(x), paste("select", select, "from", sql(x),
-                          where, group.by, having))
+                          where, group.by, having, limit))
 }
