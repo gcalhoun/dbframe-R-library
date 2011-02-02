@@ -1,8 +1,6 @@
-.PHONY: all install
+.PHONY: all
 
 all: dbframe_0.01.tar.gz
-
-install:
 	R CMD INSTALL dbframe
 
 # I like this next rule.  The .tar file depends on every file that's

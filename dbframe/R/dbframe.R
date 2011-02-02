@@ -23,11 +23,14 @@ dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE,
       ## commands specifying a query.
       frametype <- if (cache) {"table"} else {"view"}
       createsql <- if (temp) {"create temporary"} else {"create"}
-      if (table %in% dbListTables(dbc) & !overwrite) {
-        warning("Table already exists;")
-        return(FALSE)
-      }          
-      dbClearResult(dbSendQuery(dbc, paste("drop", frametype, "table if exists")))
+      if (table %in% dbListTables(dbc)) {
+        if (overwrite) {
+          dbRemoveTable(dbc, table)
+        } else {
+          warning("Table already exists;")
+          return(FALSE)
+        }
+      }
       dbClearResult(dbSendQuery(dbc,
         paste(createsql, frametype, table, "as", data)))
     } else {
