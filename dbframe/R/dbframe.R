@@ -10,7 +10,8 @@ dbview <- function(dbc, sql, cache = FALSE,...) {
   new("dbview", db = dbc, sql = sql)
 }
 
-dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE, ...) {
+dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE,
+                    overwrite = FALSE, ...) {
   ## The defaults for cache and temp are basically chosen for
   ## consistency across the different possibilities for 'data'.  Once
   ## I figure out how to do temporary frames when data is a
@@ -22,6 +23,11 @@ dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE, ...) {
       ## commands specifying a query.
       frametype <- if (cache) {"table"} else {"view"}
       createsql <- if (temp) {"create temporary"} else {"create"}
+      if (table %in% dbListTables(dbc) & !overwrite) {
+        warning("Table already exists;")
+        return(FALSE)
+      }          
+      dbClearResult(dbSendQuery(dbc, paste("drop", frametype, "table if exists")))
       dbClearResult(dbSendQuery(dbc,
         paste(createsql, frametype, table, "as", data)))
     } else {
@@ -36,7 +42,7 @@ dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE, ...) {
         dbWriteTable(db(x), sql(x),
                      data[, tablenames[tablenames
                                        %in% names(data)], drop=FALSE],
-                     row.names = FALSE,...)
+                     row.names = FALSE, overwrite = overwrite, ...)
       } else {
         ## otherwise, create the table from scratch
         dbWriteTable(db(x), sql(x), data, row.names = FALSE,...)
