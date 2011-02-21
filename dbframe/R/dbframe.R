@@ -1,14 +1,5 @@
-## dbview is a read-only connection to a database table (or query)
-setClass("dbview", representation(db = "SQLiteConnection",
+setClass("dbframe", representation(db = "SQLiteConnection",
                                   sql = "character"))
-## dbframe allows data to be written to the database table
-setClass("dbframe", contains = "dbview")
-db <- function(x,...) x@db
-sql <- function(x,...) x@sql
-
-dbview <- function(dbc, sql, cache = FALSE,...) {
-  new("dbview", db = dbc, sql = sql)
-}
 
 dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE,
                     overwrite = FALSE, ...) {

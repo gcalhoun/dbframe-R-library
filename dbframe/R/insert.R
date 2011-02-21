@@ -1,4 +1,4 @@
-'add<-' <- function(x, value) {
+'insert<-' <- function(x, value) {
   if (sql(x) %in% dbListTables(db(x))) {
     tablenames <- names(query(x, "select * from %s limit 0"))
     cols <- tablenames[tablenames %in% names(value)]
