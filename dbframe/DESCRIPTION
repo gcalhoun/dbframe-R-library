@@ -4,7 +4,7 @@ Title: Database Convenience
 Version: 0.01
 Date: 2010-10-02
 Author: Gray Calhoun
-Depends: methods, RSQLite, RSQLite.extfuns
+Depends: methods, DBI, RSQLite, RSQLite.extfuns
 Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
 Description: Some code to conveniently work with databases.
 License: GPL-2

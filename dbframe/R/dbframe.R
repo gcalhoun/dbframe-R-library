@@ -1,28 +1,31 @@
 setClass("dbframe", representation(db = "SQLiteConnection",
                                   sql = "character"))
 
-dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE,
-                    overwrite = FALSE, ...) {
+dbframe <- function(table, dbname = ":memory:", data = NULL, cache = TRUE, temp = FALSE,
+                    overwrite = FALSE, extensions = TRUE,...) {
   ## The defaults for cache and temp are basically chosen for
   ## consistency across the different possibilities for 'data'.  Once
   ## I figure out how to do temporary frames when data is a
   ## data.frame, I should change 'temp' to be TRUE by default.
-  x <- new("dbframe", db = dbc, sql = table)
+  x <- new("dbframe", db = dbConnect(dbDriver("SQLite"), dbname), sql = table)
+  ## Load the SQLite math extensions
+  if (extensions) init_extensions(db(x))
+  
   if (!is.null(data)) {
     if (is.character(data)) {
       ## if data is a character, we assume that it contains sql
       ## commands specifying a query.
       frametype <- if (cache) {"table"} else {"view"}
       createsql <- if (temp) {"create temporary"} else {"create"}
-      if (table %in% dbListTables(dbc)) {
+      if (table %in% dbListTables(db(x))) {
         if (overwrite) {
-          dbRemoveTable(dbc, table)
+          dbRemoveTable(db(x), table)
         } else {
           warning("Table already exists;")
           return(FALSE)
         }
       }
-      dbClearResult(dbSendQuery(dbc,
+      dbClearResult(dbSendQuery(db(x),
         paste(createsql, frametype, table, "as", data)))
     } else {
       if (temp) warning("Temporary tables are not implemented for this data.")
@@ -46,11 +49,6 @@ dbframe <- function(dbc, table, data = NULL, cache = TRUE, temp = FALSE,
   x
 }
 
-
-as.data.frame.dbview <- function(x,...) {
-  as.data.frame(query(x),...)
-}
-
 summary.dbframe <- function(object,...) {
   print(paste("dframe object with",
               query(object, "select count(*) from %s")),
@@ -58,9 +56,4 @@ summary.dbframe <- function(object,...) {
   print(summary(db(object)))
 }
 
-summary.dbview <- function(object,...) {
-  print(paste("dframe object with",
-              query(object, "select count(*) from %s")),
-        "entries. Summary of database connection:")
-  print(summary(db(object)))
-}
+setMethod("dbDisconnect", signature = "dbframe", function(conn,...) dbDisconnect(db(conn),...))
