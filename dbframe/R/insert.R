@@ -1,11 +1,13 @@
 'insert<-' <- function(x, value) {
-  if (sql(x) %in% dbListTables(db(x))) {
-    tablenames <- names(query(x, "select * from %s limit 0"))
-    cols <- tablenames[tablenames %in% names(value)]
+  cols <- if (is.table(x)) {
+    tablenames <- names(select(x, limit = 0))
+    tablenames[tablenames %in% names(value)]
   } else {
-    cols <- names(value)
+    names(value)
   }
-  dbWriteTable(db(x), sql(x), value[, cols, drop=FALSE],
+  dbc <- Connect(x)
+  dbWriteTable(dbc, sql(x), value[, cols, drop=FALSE],
                row.names = FALSE, overwrite = FALSE, append = TRUE)
+  dbDisconnect(dbc)
   x
 }

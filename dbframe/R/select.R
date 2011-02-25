@@ -11,7 +11,8 @@ selectSQL <- function(tablesql, cols = "*", where = NULL, group.by = NULL,
     ## group.by elements that are at the beginning of a select
     ## statement, so that it recognizes things like:
     ## cols = "m.s as THEs", group.by = "m.s"
-    paste(c(cols, group.by[!sapply(group.by, function(g) g %in% substr(cols, 1, nchar(g)))]),
+    paste(c(cols, group.by[!sapply(group.by, function(g)
+                                   g %in% substr(cols, 1, nchar(g)))]),
           collapse = ", ")
   }
   group.by <- if (is.null(group.by)) "" else {
@@ -38,19 +39,28 @@ extractArg <- function(name, default, lengthReq, arglist) {
 tableSQL <- function(tablenames, join, on, using) {
   paste(tablenames[1], names(tablenames)[1],
         paste(join, tablenames[-1], names(tablenames)[-1], 
-              c(ifelse(is.na(on), paste("using(", using, ")", sep = ""), paste("on", on)))))
+              c(ifelse(is.na(on), paste("using(", using, ")", sep = ""),
+                       paste("on", on)))))
 }
 
-setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...)
-          dbGetQuery(db(x), selectSQL(sql(x),...)))
+setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
+  dbc <- Connect(x)
+  d <- dbGetQuery(dbc, selectSQL(sql(x),...))
+  dbDisconnect(dbc)
+  d
+})
 
-setMethod("select", signature = c("dbframe", "character"), function(x, cols,...)
-          dbGetQuery(db(x), selectSQL(sql(x), cols, ...)))
+setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
+  dbc <- Connect(x)
+  d <- dbGetQuery(dbc, selectSQL(sql(x), cols, ...))
+  dbDisconnect(dbc)
+  d
+})
 
 setMethod("select", signature = c("list", "character"), function(x, cols,...) {
-  warning("Joins are not implemented yet.")
   if (length(x) == 1) return(select(x[[1]], cols,...))
-  if (is.null(names(x))) stop("If 'x' is a list, it must specify names (aliases) for each element")
+  if (is.null(names(x)))
+    stop("If 'x' is a list, it must specify names (aliases) for each element")
 
   ## extract the arguments that describe the 'join'
   allargs <- list(...)
@@ -61,7 +71,8 @@ setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   using <- extractArg("using", NA, length(x) - 1, allargs)
   allargs$using <- NULL
 
-  if (!all(xor(on, using))) stop("'on' and 'using' can't both be specified for the same join.")
+  if (!all(xor(is.na(on), is.na(using))))
+    stop("'on' and 'using' can't both be specified for the same join.")
   
   ## determine which database we'll use as the 'main' db.  All of the
   ## other databases will be attached as necessary.  By default, we'll
@@ -69,10 +80,10 @@ setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   main <- extractArg("main", db(x[[1]]), NA, allargs)
   allargs$main <- NULL
   ## Get the other databases
-  tableInfo <- data.frame(db = sapply(x, function(y) dbGetInfo(db(y))$dbname),
-                          sql = sapply(x, function(y) sql(y)),
+  tableInfo <- data.frame(db = sapply(x, db),
+                          sql = sapply(x, sql),
                           tableAlias = names(x), stringsAsFactors = FALSE)
-  tableInfo <- within(tableInfo, ismain <- db == dbGetInfo(main)$dbname)
+  tableInfo <- within(tableInfo, ismain <- db == main)
   tableInfo$dbAlias <- ""
   i <- 0
   for (dbname in unique(tableInfo$db[!tableInfo$ismain])) {
@@ -81,21 +92,23 @@ setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   }
 
   ## set up the arguments for selectSQL
-  allargs$tablesql <- tableSQL(paste(with(tableInfo, ifelse(ismain, sql, paste(dbAlias, sql, sep = "."))),
+  allargs$tablesql <- tableSQL(paste(with(tableInfo,
+                                          ifelse(ismain, sql, paste(dbAlias, sql, sep = "."))),
                                      tableInfo$tableAlias), join, on, using)
   allargs$cols <- cols
 
   ## Attach the other databases to the main db, run the query, and then detach
-  dbBeginTransaction(main)
+  dbc <- dbConnect("SQLite", main)
   for (a in rows(unique(subset(tableInfo, !ismain, select = c(db, dbAlias))))) {
-    r <- dbSendQuery(main, paste("attach database '", a$db, "' as ", a$dbAlias, sep = ""))
+    r <- dbSendQuery(dbc, paste("attach database '", a$db, "' as ", a$dbAlias, sep = ""))
     dbClearResult(r)
   }
-  d <- dbGetQuery(main, do.call(selectSQL, allargs))  
+  d <- dbGetQuery(dbc, do.call(selectSQL, allargs))  
   for (a in rows(unique(subset(tableInfo, !ismain, select = c(db, dbAlias))))) {
-    r <- dbSendQuery(main, paste("detach database", a$dbAlias))
+    r <- dbSendQuery(dbc, paste("detach database", a$dbAlias))
     dbClearResult(r)
   }
+  dbDisconnect(dbc)
   d
 })
 
@@ -120,7 +133,8 @@ setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
   limtext <- ""
   if ("limit" %in% names(allargs)) {
     if (length(allargs[["limit"]]) > 1) {
-      if (length(allargs[["limit"]]) != length(cols)) stop("'limit' must have the same length as 'cols' or length 1")
+      if (length(allargs[["limit"]]) != length(cols))
+        stop("'limit' must have the same length as 'cols' or length 1")
       eachlimit <- as.list(allargs[["limit"]])
     } else {
       limtext <- paste(" limit ", allargs[["limit"]])
@@ -137,5 +151,8 @@ setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
     allargs$limit <- eachlimit[[j]]
     do.call(selectSQL, allargs)
   })
-  dbGetQuery(db(x), paste(paste(sqls, c(comp, ""), collapse = " "), ordertext, limtext))
+  dbc <- Connect(x)
+  d <- dbGetQuery(dbc, paste(paste(sqls, c(comp, ""), collapse = " "), ordertext, limtext))
+  dbDisconnect(dbc)
+  d
 })
