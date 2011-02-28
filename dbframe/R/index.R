@@ -1,6 +1,7 @@
 "index<-" <- function(x, unique = FALSE, value) {
   indices <- index(x)
-  allindices <- dbGetQuery(db(x), sprintf("
+  dbc <- Connect(x)
+  allindices <- dbGetQuery(dbc, sprintf("
 select name from sqlite_master where type='index';"))$name
   if (!is.null(indices) && any(unlist(lapply(indices, function(a) {
     all(a[1:length(value)] == value)})))) {
@@ -18,15 +19,17 @@ select name from sqlite_master where type='index';"))$name
 
   ## add the index to the database
   sqlstart <- if (unique) "create unique index" else "create index"
-  dbSendQuery(db(x), paste(sqlstart, indexname, "on", sql(x),"(",
-                           paste(value, collapse = ","), ");"))
+  dbSendQuery(dbc, paste(sqlstart, indexname, "on", sql(x),"(",
+                         paste(value, collapse = ","), ");"))
   x
 }
 
 index <- function(x) {
-  indexdata <- dbGetQuery(db(x), sprintf("
+  dbc <- Connect(x)
+  indexdata <- dbGetQuery(dbc, sprintf("
 select name, sql from sqlite_master
 where type='index' and tbl_name='%s';", sql(x)))
+  dbDisconnect(dbc)
   if (nrow(indexdata) == 0) return(NULL)
   cols <- lapply(strsplit(indexdata$sql, "\\(|,|\\)"),
                  function(s) sub("[[:blank:]]", "", s[-1]))
