@@ -4,9 +4,9 @@ setGeneric("clear", function(..., delete = TRUE, deparse.level = 1)
 setMethod("clear", signature = "dbframe", function(..., delete = TRUE,
                      deparse.level = 1) {
   x <- list(...)
-  if (!all(sapply(x, is.dbframe))) stop("All arguments must be dbframes")
+  if (!all(sapply(x, function(y) is(y, "dbframe")))) stop("All arguments must be dbframes")
   sapply(x, function(y) {
-    dbc <- Connect(y)
+    dbc <- dbConnect(y)
     ## remove the table from the corresponding database if it's there
     res <- if (sql(y) %in% dbListTables(dbc)) {
       dbRemoveTable(dbc, sql(y),...)

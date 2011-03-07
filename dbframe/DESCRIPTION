@@ -1,10 +1,10 @@
 Package: dbframe
 Type: Package
 Title: Database Convenience
-Version: 0.01
+Version: 0.1.1
 Date: 2010-10-02
 Author: Gray Calhoun
-Depends: methods, DBI, RSQLite, RSQLite.extfuns
+Depends: methods, utils, DBI, RSQLite, RSQLite.extfuns
 Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
 Description: Some code to conveniently work with databases.
 License: GPL-2

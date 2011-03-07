@@ -1,5 +1,5 @@
 package := dbframe
-version := 0.01
+version := 0.1.1
 
 .PHONY: all
 

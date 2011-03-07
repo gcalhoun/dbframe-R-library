@@ -44,14 +44,14 @@ tableSQL <- function(tablenames, join, on, using) {
 }
 
 setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
-  dbc <- Connect(x)
+  dbc <- dbConnect(x)
   d <- dbGetQuery(dbc, selectSQL(sql(x),...))
   dbDisconnect(dbc)
   d
 })
 
 setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
-  dbc <- Connect(x)
+  dbc <- dbConnect(x)
   d <- dbGetQuery(dbc, selectSQL(sql(x), cols, ...))
   dbDisconnect(dbc)
   d
@@ -98,7 +98,7 @@ setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   allargs$cols <- cols
 
   ## Attach the other databases to the main db, run the query, and then detach
-  dbc <- dbConnect("SQLite", main)
+  dbc <- dbConnect(main)
   for (a in rows(unique(subset(tableInfo, !ismain, select = c(db, dbAlias))))) {
     r <- dbSendQuery(dbc, paste("attach database '", a$db, "' as ", a$dbAlias, sep = ""))
     dbClearResult(r)
@@ -151,7 +151,7 @@ setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
     allargs$limit <- eachlimit[[j]]
     do.call(selectSQL, allargs)
   })
-  dbc <- Connect(x)
+  dbc <- dbConnect(x)
   d <- dbGetQuery(dbc, paste(paste(sqls, c(comp, ""), collapse = " "), ordertext, limtext))
   dbDisconnect(dbc)
   d
