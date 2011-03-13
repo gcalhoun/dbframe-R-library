@@ -1,6 +1,6 @@
 import(DBI, RSQLite, RSQLite.extfuns)
 importFrom(utils, head, tail)
-export(clear, db, dbframe, index, 'index<-', 'insert<-', rows, select, sql, dfapply)
+export(clear, db, dbframe, index, 'index<-', 'insert<-', rows, select, sql, dfapply, pdfapply)
 exportClass(dbframe)
 exportMethods(dbConnect, "==", "!=")
 S3method(head, dbframe)
