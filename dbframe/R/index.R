@@ -11,7 +11,7 @@ where type='index' and tbl_name='%s';", sql(x)))
   cols
 }
 
-'index<-' <- function(x, value) {
+'index<-' <- function(x, unique = FALSE, value) {
   indices <- index(x)
   dbc <- dbConnect(x)
   allindices <- dbGetQuery(dbc, sprintf("
@@ -23,8 +23,8 @@ select name from sqlite_master where type='index';"))$name
   } 
 
   ## create unique index name
-  indexname <- make.unique(paste(sql(x), "i", sep = ""),
-                           allindices, sep = "")[1]
+  indexname <- make.unique(c(paste(sql(x), "i", sep = ""),
+                             allindices), sep = "")[1]
 
   ## add the index to the database
   sqlstart <- if (unique) "create unique index" else "create index"

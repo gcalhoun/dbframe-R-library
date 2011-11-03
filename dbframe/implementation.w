@@ -1,3 +1,55 @@
+\documentclass[11pt,draft]{article}
+\usepackage{amsmath,amsthm,amssymb,microtype,listings}
+\usepackage[T1]{fontenc}
+\usepackage[round]{natbib}
+\usepackage[margin = 1in]{geometry}
+\usepackage{fontspec}
+\lstset{language=R,basicstyle=\ttfamily}
+\DisableLigatures{family=tt*}
+\frenchspacing
+\raggedright
+
+\title{Implementation details of the `dbframe' package}
+\date{\today}
+\author{Gray Calhoun}
+
+\bibliographystyle{abbrvnat}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{The dbframe class}
+@o R/AllClasses.R @{
+setClass("dbframe", representation(db = "character",
+                                   sql = "character",
+                                   extensions = "logical"))
+
+setMethod("==", c("dbframe", "dbframe"), function(e1, e2)
+          e1@@db == e2@@db & e1@@sql == e2@@sql & e1@@extensions == e2@@extensions)
+setMethod("!=", c("dbframe", "dbframe"), function(e1, e2)
+          e1@@db != e2@@db & e1@@sql != e2@@sql & e1@@extensions != e2@@extensions)
+@}
+
+And then we have the code to make a new @_dbframe@_
+@o R/dbframe.R @{
+dbframe <- function(table, dbname, data = NULL,
+                    overwrite = FALSE, extensions = TRUE,...) {
+  x <- new("dbframe", db = dbname, sql = table, extensions = extensions)
+  
+  if (!is.null(data)) {
+    if (overwrite) clear(x, delete = FALSE)
+    insert(x) <- as.data.frame(data)
+  }
+  x
+}
+@| dbframe @}
+
+\section{Queries}
+
+\subsection{Select queries}
+
+@o R/select.R @{
 setGeneric("select", function(x, cols, ...) standardGeneric("select"))
 
 selectSQL <- function(tablesql, cols = "*", where = NULL, group.by = NULL,
@@ -11,8 +63,8 @@ selectSQL <- function(tablesql, cols = "*", where = NULL, group.by = NULL,
     ## group.by elements that are at the beginning of a select
     ## statement, so that it recognizes things like:
     ## cols = "m.s as THEs", group.by = "m.s"
-    paste(c(cols, group.by[!sapply(group.by, function(g)
-                                   g %in% substr(cols, 1, nchar(g)))]),
+    paste(c(group.by[!sapply(group.by, function(g)
+                             g %in% substr(cols, 1, nchar(g)))], cols),
           collapse = ", ")
   }
   group.by <- if (is.null(group.by)) "" else {
@@ -156,3 +208,54 @@ setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
   dbDisconnect(dbc)
   d
 })
+@| select @}
+
+\subsection{Insert queries}
+
+@o R/insert.R @{
+setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
+
+setMethod("insert<-", signature = "dbframe",
+          function(x,...,value) doInsert(x,...,value))
+
+doInsert <- function(x, value) {
+  dbc <- dbConnect(x)
+  cols <- if (dbExistsTable(dbc, sql(x))) {
+    tablenames <- names(select(x, limit = 0))
+    tablenames[tablenames %in% names(value)]
+  } else {
+    names(value)
+  }
+  dbWriteTable(dbc, sql(x), value[, cols, drop=FALSE],
+               row.names = FALSE, overwrite = FALSE, append = TRUE)
+  dbDisconnect(dbc)
+  x
+}
+@| insert @}
+
+\appendix
+
+\section{Namespace}
+
+@o NAMESPACE @{
+import(DBI, RSQLite, RSQLite.extfuns)
+importFrom(utils, head, tail)
+export(clear, db, dbframe, index, 'index<-', 'insert<-', rows, select, sql, dfapply, pdfapply)
+exportClass(dbframe)
+exportMethods(dbConnect, "==", "!=")
+S3method(head, dbframe)
+S3method(tail, dbframe)
+@}
+
+\section{Index}
+
+\subsection{Files generated}
+@f
+
+\subsection{Fragment names}
+@m
+
+\subsection{Variables}
+@u
+
+\end{document}

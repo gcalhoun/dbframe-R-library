@@ -1,5 +1,13 @@
+auto/
+*.aux
+*.log
+*.pdf
+*.tex
+*.toc
 
 *.tar.gz
 *.Rcheck
 *~
 .Rhistory
+NAMESPACE
+R/*.R

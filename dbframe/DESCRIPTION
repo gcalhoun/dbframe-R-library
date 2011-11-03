@@ -1,6 +1,6 @@
 Package: dbframe
 Type: Package
-Title: Database Convenience
+Title: A new SQL interface
 Version: 0.1.1
 Date: 2010-10-02
 Author: Gray Calhoun
