@@ -9,7 +9,8 @@
 \frenchspacing
 \raggedright
 
-\title{Implementation details of the `dbframe' package}
+\title{Implementation details of the `dbframe'
+  package\footnote{Copyright \textcopyright\ 2011 by Gray Calhoun}}
 \date{\today}
 \author{Gray Calhoun}
 
@@ -20,7 +21,7 @@
 \tableofcontents
 
 \section{The dbframe class}
-@o R/AllClasses.R @{
+@o R/AllClasses.R @{#
 setClass("dbframe", representation(db = "character",
                                    sql = "character",
                                    extensions = "logical"))
@@ -28,10 +29,15 @@ setClass("dbframe", representation(db = "character",
 setMethod("==", c("dbframe", "dbframe"), function(e1, e2)
           e1@@db == e2@@db & e1@@sql == e2@@sql & e1@@extensions == e2@@extensions)
 setMethod("!=", c("dbframe", "dbframe"), function(e1, e2)
-          e1@@db != e2@@db & e1@@sql != e2@@sql & e1@@extensions != e2@@extensions)
-@}
+          e1@@db != e2@@db & e1@@sql != e2@@sql & e1@@extensions !=
+          e2@@extensions)
 
-And then we have the code to make a new @_dbframe@_
+setGeneric("sql", function(x) standardGeneric("sql"))
+
+setMethod("sql", signature = c("dbframe"), function(x) x@@sql)
+@| sql @}
+
+And then we have the code to make a new dbframe
 @o R/dbframe.R @{
 dbframe <- function(table, dbname, data = NULL,
                     overwrite = FALSE, extensions = TRUE,...) {
@@ -45,207 +51,64 @@ dbframe <- function(table, dbname, data = NULL,
 }
 @| dbframe @}
 
-\section{Queries}
+\section{Publication quality tables}
 
-\subsection{Select queries}
+@o R/publictable.R @{
+setGeneric("publictable", function(object,...)
+           standardGeneric("publictable"))
 
-@o R/select.R @{
-setGeneric("select", function(x, cols, ...) standardGeneric("select"))
+setMethod("publictable", signature = c("dbframe"),
+          function(object,...) {
+            dots <- list(...)
+            summarydata <- do.call("select", c(object = object, dots))
+            do.call("dftable", c(object = summarydata, dots))})
 
-selectSQL <- function(tablesql, cols = "*", where = NULL, group.by = NULL,
-                      having = NULL, order.by = NULL, limit = NULL, ...) {
-  if ((length(cols) == 1) && (nchar(cols) == 0)) cols <- NULL
-  cols <- if (is.null(group.by)) {
-    paste(cols, collapse = ", ")
-  } else {
-    ## add elements of the 'group.by' vector that aren't already in
-    ## cols to the select statement.  The sapply part looks for
-    ## group.by elements that are at the beginning of a select
-    ## statement, so that it recognizes things like:
-    ## cols = "m.s as THEs", group.by = "m.s"
-    paste(c(group.by[!sapply(group.by, function(g)
-                             g %in% substr(cols, 1, nchar(g)))], cols),
-          collapse = ", ")
-  }
-  group.by <- if (is.null(group.by)) "" else {
-    paste("group by", paste(group.by, collapse = ", "))
-  }
-  order.by <- if (is.null(order.by)) "" else {
-    paste("order by", paste(order.by, collapse = ", "))
-  }
-  
-  having   <- if (is.null(having))   "" else paste("having", having)
-  where    <- if (is.null(where))    "" else paste("where", where)
-  limit    <- if (is.null(limit))    "" else paste("limit", limit)
+setMethod("publictable", signature = c("data.frame"),
+          function(object,...) dftable(object,...))
 
-  paste("select", cols, "from", tablesql, where, group.by, having, order.by, limit)
+dftable <- function(dframe, align, digits, tabular.environment = "tabularx",
+                    sanitize.text.function = function(x) x,...) {
+  gsub("\\\\begin\\{tabularx\\}",
+       "\\\\begin\\{tabularx\\}\\{\\\\textwidth\\}",
+       print(xtable(dframe, align = align, digits = digits,...),
+             file = "/dev/null", floating = FALSE,
+             add.to.row = list(pos=list(-1, 0, nrow(summarydata)),
+               command = c("\\toprule", "\\midrule", "\\bottomrule")),
+             tabular.environment = tabular.environment,
+             sanitize.text.function = sanitize.text.function))
 }
-
-extractArg <- function(name, default, lengthReq, arglist) {
-  v <- if (name %in% names(arglist)) arglist[[name]] else default
-  if (is.na(lengthReq) | length(v) == lengthReq) return(v)
-  else if (length(v) == 1) return(rep(v, lengthReq))
-  else stop("Incorrect length of argument")
-}
-
-tableSQL <- function(tablenames, join, on, using) {
-  paste(tablenames[1], names(tablenames)[1],
-        paste(join, tablenames[-1], names(tablenames)[-1], 
-              c(ifelse(is.na(on), paste("using(", using, ")", sep = ""),
-                       paste("on", on)))))
-}
-
-setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
-  dbc <- dbConnect(x)
-  d <- dbGetQuery(dbc, selectSQL(sql(x),...))
-  dbDisconnect(dbc)
-  d
-})
-
-setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
-  dbc <- dbConnect(x)
-  d <- dbGetQuery(dbc, selectSQL(sql(x), cols, ...))
-  dbDisconnect(dbc)
-  d
-})
-
-setMethod("select", signature = c("list", "character"), function(x, cols,...) {
-  if (length(x) == 1) return(select(x[[1]], cols,...))
-  if (is.null(names(x)))
-    stop("If 'x' is a list, it must specify names (aliases) for each element")
-
-  ## extract the arguments that describe the 'join'
-  allargs <- list(...)
-  join <- paste(extractArg("join", "inner", length(x) - 1, allargs), "join")
-  allargs$join <- NULL
-  on <- extractArg("on", NA, length(x) - 1, allargs)
-  allargs$on <- NULL
-  using <- extractArg("using", NA, length(x) - 1, allargs)
-  allargs$using <- NULL
-
-  if (!all(xor(is.na(on), is.na(using))))
-    stop("'on' and 'using' can't both be specified for the same join.")
-  
-  ## determine which database we'll use as the 'main' db.  All of the
-  ## other databases will be attached as necessary.  By default, we'll
-  ## use the database for the first element of 'x'.
-  main <- extractArg("main", db(x[[1]]), NA, allargs)
-  allargs$main <- NULL
-  ## Get the other databases
-  tableInfo <- data.frame(db = sapply(x, db),
-                          sql = sapply(x, sql),
-                          tableAlias = names(x), stringsAsFactors = FALSE)
-  tableInfo <- within(tableInfo, ismain <- db == main)
-  tableInfo$dbAlias <- ""
-  i <- 0
-  for (dbname in unique(tableInfo$db[!tableInfo$ismain])) {
-    i <- i+1
-    tableInfo$dbAlias[tableInfo$db == dbname] <- paste("dbAlias", i, sep = "")
-  }
-
-  ## set up the arguments for selectSQL
-  allargs$tablesql <- tableSQL(paste(with(tableInfo,
-                                          ifelse(ismain, sql, paste(dbAlias, sql, sep = "."))),
-                                     tableInfo$tableAlias), join, on, using)
-  allargs$cols <- cols
-
-  ## Attach the other databases to the main db, run the query, and then detach
-  dbc <- dbConnect(main)
-  for (a in rows(unique(subset(tableInfo, !ismain, select = c(db, dbAlias))))) {
-    r <- dbSendQuery(dbc, paste("attach database '", a$db, "' as ", a$dbAlias, sep = ""))
-    dbClearResult(r)
-  }
-  d <- dbGetQuery(dbc, do.call(selectSQL, allargs))  
-  for (a in rows(unique(subset(tableInfo, !ismain, select = c(db, dbAlias))))) {
-    r <- dbSendQuery(dbc, paste("detach database", a$dbAlias))
-    dbClearResult(r)
-  }
-  dbDisconnect(dbc)
-  d
-})
-
-
-setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
-  if (length(cols) == 1) return(select(x, cols[[1]],...))
-  
-  allargs <- list(...)
-  comp <- extractArg("comp", "union all", length(cols) - 1, allargs)
-  allargs$comp <- NULL
-    
-  if ("order.by" %in% names(allargs)) {
-    ordertext <- paste(" order by ", paste(allargs[["order.by"]], collapse = ", "))
-    allargs[["order.by"]] <- NULL
-  } else {
-    ordertext <- ""
-  }
-
-  ## if 'limit' has more than one entry, we'll apply it to each of
-  ## the individual queries, otherwise we apply it at the end.
-  eachlimit <- vector("list", length(cols))
-  limtext <- ""
-  if ("limit" %in% names(allargs)) {
-    if (length(allargs[["limit"]]) > 1) {
-      if (length(allargs[["limit"]]) != length(cols))
-        stop("'limit' must have the same length as 'cols' or length 1")
-      eachlimit <- as.list(allargs[["limit"]])
-    } else {
-      limtext <- paste(" limit ", allargs[["limit"]])
-    }
-    allargs[["limit"]] <- NULL
-  }
-  
-  if (!all(sapply(cols, is.character)))
-    stop("All elements of 'cols' must be characters")
-
-  sqls <- sapply(seq_along(cols), function(j) {
-    allargs$tablesql <- sql(x)
-    allargs$cols <- cols[[j]]
-    allargs$limit <- eachlimit[[j]]
-    do.call(selectSQL, allargs)
-  })
-  dbc <- dbConnect(x)
-  d <- dbGetQuery(dbc, paste(paste(sqls, c(comp, ""), collapse = " "), ordertext, limtext))
-  dbDisconnect(dbc)
-  d
-})
-@| select @}
-
-\subsection{Insert queries}
-
-@o R/insert.R @{
-setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
-
-setMethod("insert<-", signature = "dbframe",
-          function(x,...,value) doInsert(x,...,value))
-
-doInsert <- function(x, value) {
-  dbc <- dbConnect(x)
-  cols <- if (dbExistsTable(dbc, sql(x))) {
-    tablenames <- names(select(x, limit = 0))
-    tablenames[tablenames %in% names(value)]
-  } else {
-    names(value)
-  }
-  dbWriteTable(dbc, sql(x), value[, cols, drop=FALSE],
-               row.names = FALSE, overwrite = FALSE, append = TRUE)
-  dbDisconnect(dbc)
-  x
-}
-@| insert @}
+@| publictable dftable @}
 
 \appendix
 
 \section{Namespace}
 
 @o NAMESPACE @{
-import(DBI, RSQLite, RSQLite.extfuns)
+import(DBI, RSQLite, RSQLite.extfuns, xtable)
 importFrom(utils, head, tail)
-export(clear, db, dbframe, index, 'index<-', 'insert<-', rows, select, sql, dfapply, pdfapply)
+export(clear, db, dbframe, index, 'index<-', 'insert<-', 
+       rows, select, sql, dfapply, pdfapply, publictable)
 exportClass(dbframe)
 exportMethods(dbConnect, "==", "!=")
 S3method(head, dbframe)
 S3method(tail, dbframe)
 @}
+
+\section{Licensing information for this software}
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+\textsc{without any warranty}; without even the implied warranty of
+\textsc{merchantability} or \textsc{fitness for a particular purpose}.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see
+\texttt{<http://www.gnu.org/licenses/>}.
 
 \section{Index}
 

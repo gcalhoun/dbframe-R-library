@@ -10,4 +10,7 @@ auto/
 *~
 .Rhistory
 NAMESPACE
-R/*.R
+
+dbframe/R/AllClasses.R
+dbframe/R/dbframe.R
+dbframe/R/publictable.R
