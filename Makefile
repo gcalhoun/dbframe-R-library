@@ -2,11 +2,13 @@ package := dbframe
 version := 0.2
 zipfile := $(package)_$(version).tar.gz
 
-RFLAGS   := --vanilla --slave
 Rscript  := Rscript
-latexmk  := /usr/local/texlive/2009/bin/x86_64-linux/latexmk
-LATEXMKFLAGS := -pdf -silent -latex=xelatex -pdflatex=xelatex
-nuweb    := nuweb
+latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
+noweave  := noweave
+notangle := notangle
+
+RFLAGS       := --vanilla --slave
+LATEXMKFLAGS := -pdf -silent
 
 Rfiles := $(patsubst $(package)/man/%.Rd, $(package)/R/%.R, $(wildcard $(package)/man/*.Rd))
 
@@ -22,11 +24,15 @@ install: $(zipfile)
 	R CMD INSTALL $(package)
 	touch $@
 
-$(Rfiles) $(package)/inst/doc/implementation.tex $(package)/NAMESPACE: $(package)/implementation.w
+$(Rfiles) $(package)/NAMESPACE: $(package)/implementation.rnw
 	mkdir -p $(dir $@)
-	$(nuweb) -l $<
+	$(notangle) -R$(@F) $< | cpif $@
+
 %.pdf: %.tex
 	cd $(dir $<) && $(latexmk) $(LATEXMKFLAGS) $(<F)
+$(package)/inst/doc/implementation.tex: $(package)/implementation.rnw
+	mkdir -p $(dir $@)
+	$(noweave) -latex -x -delay $< | cpif $@
 
 # I like this next rule.  The 'check' file depends on every file that's
 # under version control or unknown in the $(package) subdirectory.

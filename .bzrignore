@@ -14,3 +14,6 @@ NAMESPACE
 dbframe/R/AllClasses.R
 dbframe/R/dbframe.R
 dbframe/R/publictable.R
+check
+install
+dbframe/inst
