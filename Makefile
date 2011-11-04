@@ -21,7 +21,7 @@ $(zipfile): check
 	R CMD build $(package)
 
 install: $(zipfile)
-	R CMD INSTALL $(package)
+	sudo R CMD INSTALL $(package)
 	touch $@
 
 $(Rfiles) $(package)/NAMESPACE: $(package)/implementation.rnw
@@ -32,7 +32,7 @@ $(Rfiles) $(package)/NAMESPACE: $(package)/implementation.rnw
 	cd $(dir $<) && $(latexmk) $(LATEXMKFLAGS) $(<F)
 $(package)/inst/doc/implementation.tex: $(package)/implementation.rnw
 	mkdir -p $(dir $@)
-	$(noweave) -latex -x -delay $< | cpif $@
+	$(noweave) -latex -index -delay $< | cpif $@
 
 # I like this next rule.  The 'check' file depends on every file that's
 # under version control or unknown in the $(package) subdirectory.

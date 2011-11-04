@@ -5,7 +5,8 @@
   from an arbitrary data frame.}
 \usage{
 dftable(dframe, align, digits, tabular.environment = "tabularx",
-        sanitize.text.function = function(x) x,...)
+        sanitize.text.function = function(x) x, drop = NULL,
+        include.rownames = FALSE,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
