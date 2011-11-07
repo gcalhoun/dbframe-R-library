@@ -11,9 +11,9 @@ auto/
 .Rhistory
 NAMESPACE
 
-dbframe/R/AllClasses.R
 dbframe/R/dbframe.R
 dbframe/R/publictable.R
+dbframe/R/insert.R
 check
 install
 dbframe/inst
