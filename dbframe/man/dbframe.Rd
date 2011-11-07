@@ -19,7 +19,7 @@ dbframe(table, dbname, data = NULL, extensions = NULL)
 }
 \details{Establishes a connection to an SQLite database.}
 \examples{
-testdata <- dbframe("table1", ":memory:", data.frame(y = 1:10, x = rnorm(1)))
-head(testdata)
+## testdata <- dbframe("table1", ":memory:", data.frame(y = 1:10, x = rnorm(1)))
+## head(testdata)
 }
 

@@ -49,7 +49,7 @@ Gray Calhoun \email{gcalhoun@iastate.edu}
 \examples{
 showClass("dbframe")
 }
-\section{Implementation}
+\section{Implementation}{
 This is where the source code would go.
-
+}
 \keyword{classes}

@@ -32,7 +32,7 @@ The [[insert]] query works like this:
 > insert(dbframe_object) <- data_frame
 @
 
-<<insert.R>>=
+<<insert-methods.R>>=
 setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
 setMethod("insert<-", signature = "dbframe", function(x,...,value) {
   dbc <- dbConnect(x)
@@ -46,12 +46,26 @@ setMethod("insert<-", signature = "dbframe", function(x,...,value) {
                row.names = FALSE, overwrite = FALSE, append = TRUE,...)
   dbDisconnect(dbc)
   x
-}
+})
 @ %def insert "insert<-"
 
 \subsection{Select}
 
+\subsubsection{head and tail}
+
+\subsection{Update}
+
+\section{Other database functions}
+
+\subsection{Indexing}
+
 \section{Other functions}
+
+\subsection{Data frame manipulation}
+
+\subsubsection{dfapply}
+
+\subsubsection{rows}
 
 \subsection{Publication quality tables}
 
