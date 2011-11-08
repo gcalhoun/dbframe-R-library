@@ -5,8 +5,8 @@ Version: 0.1.1
 Date: 2010-10-02
 Author: Gray Calhoun
 Depends: methods, utils, DBI, RSQLite, RSQLite.extfuns, xtable
-Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
+Maintainer: Gray Calhoun \email{gcalhoun@iastate.edu}
 Description: Some code to conveniently work with databases.
-License: GPL-2
+License: GPL-3
 LazyLoad: yes
-
+LazyData: yes

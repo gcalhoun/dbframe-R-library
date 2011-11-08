@@ -161,36 +161,6 @@ dbframe <- function(table, dbname, data = NULL, extensions = TRUE,...) {
 }
 @ %def dbframe
 
-\subsection{Namespace}
-
-<<NAMESPACE>>=
-import(DBI, RSQLite, RSQLite.extfuns, xtable)
-importFrom(utils, head, tail)
-importFrom(xtable, xtable)
-export(clear, db, dbframe, dfapply, extensions, index, 'index<-', 'insert<-', 
-       pdfapply, publictable, rows, select, sql)
-exportClass(dbframe)
-exportMethods(dbConnect, "==", "!=")
-S3method(head, dbframe)
-S3method(tail, dbframe)
-@ %def xtable
-
-\subsection{Licensing information for this software}
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
-
-This program is distributed in the hope that it will be useful, but
-\textsc{without any warranty}; without even the implied warranty of
-\textsc{merchantability} or \textsc{fitness for a particular purpose}.
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see
-\texttt{<http://www.gnu.org/licenses/>}.
-
 \addsection{Index}
 \addsubsection{Functions and variables}\nowebindex
 \addsubsection{Code chunks and files}\nowebchunks

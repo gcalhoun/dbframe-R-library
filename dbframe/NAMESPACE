@@ -1,0 +1,9 @@
+import(DBI, RSQLite, RSQLite.extfuns, xtable)
+importFrom(utils, head, tail)
+importFrom(xtable, xtable)
+export(clear, db, dbframe, dfapply, extensions, index, 'index<-',
+       'insert<-', pdfapply, publictable, rows, select, sql)
+exportClass(dbframe)
+exportMethods(dbConnect, "==", "!=")
+S3method(head, dbframe)
+S3method(tail, dbframe)
