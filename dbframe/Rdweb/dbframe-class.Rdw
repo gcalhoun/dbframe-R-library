@@ -1,0 +1,68 @@
+\name{dbframe-class}
+\Rdversion{1.1}
+\docType{class}
+\alias{dbframe-class}
+\alias{==,dbframe,dbframe-method}
+\alias{!=,dbframe,dbframe-method}
+\alias{db,dbframe-method}
+\alias{extensions,dbframe-method}
+\alias{sql,dbframe-method}
+
+\title{Class \code{"dbframe"}}
+\description{Fill in description}
+\section{Objects from the Class}{
+Objects can be created by calls of the form \code{new("dbframe", ...)}.
+%%  ~~ describe objects here ~~ 
+}
+\section{Slots}{
+  \describe{
+    \item{\code{db}:}{Object of class \code{"character"} ~~ }
+    \item{\code{sql}:}{Object of class \code{"character"} ~~ }
+    \item{\code{extensions}:}{Object of class \code{"logical"} ~~ }
+  }
+}
+\section{Methods}{
+  \describe{
+    \item{==}{\code{signature(e1 = "dbframe", e2 = "dbframe")}: ... }
+    \item{!=}{\code{signature(e1 = "dbframe", e2 = "dbframe")}: ... }
+    \item{db}{\code{signature(x = "dbframe")}: ... }
+    \item{extensions}{\code{signature(x = "dbframe")}: ... }
+    \item{sql}{\code{signature(x = "dbframe")}: ... }
+	 }
+}
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+
+\section{Implementation}{
+The basic definition of the class is straightforward:
+<<*>>=
+setClass("dbframe", representation(db = "character", sql = "character",
+                                   extensions = "logical"))
+@
+
+We'll define some accessor methods as well:
+<<*>>=
+setGeneric("sql", function(x) standardGeneric("sql"))
+setGeneric("db", function(x) standardGeneric("db"))
+setGeneric("extensions", function(x) standardGeneric("extensions"))
+
+setMethod("sql", signature = c("dbframe"), function(x) x@sql)
+setMethod("db", signature = c("dbframe"), function(x) x@db)
+setMethod("extensions", signature = c("dbframe"), function(x) x@extensions)
+@
+
+And some functions to determine basic equality:
+<<*>>=
+setMethod("==", c("dbframe", "dbframe"), function(e1, e2)
+          e1@db == e2@db & e1@sql == e2@sql & e1@extensions == e2@extensions)
+setMethod("!=", c("dbframe", "dbframe"), function(e1, e2)
+          e1@db != e2@db & e1@sql != e2@sql &
+          e1@extensions != e2@extensions)
+@
+}
+
+\seealso{\link{RSQlite}}
+\examples{
+showClass("dbframe")
+}
+\keyword{classes}
+\keyword{database}

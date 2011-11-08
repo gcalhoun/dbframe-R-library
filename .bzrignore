@@ -9,11 +9,10 @@ auto/
 *.Rcheck
 *~
 .Rhistory
-NAMESPACE
 
-dbframe/R/dbframe.R
-dbframe/R/publictable.R
-dbframe/R/insert.R
+dbframe/R/*
+dbframe/man/*
+
 check
 install
 dbframe/inst

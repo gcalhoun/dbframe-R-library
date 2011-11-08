@@ -24,7 +24,7 @@ install: $(zipfile)
 	sudo R CMD INSTALL $(package)
 	touch $@
 
-$(Rfiles) $(package)/NAMESPACE: $(package)/implementation.rnw
+$(Rfiles): $(package)/implementation.rnw
 	mkdir -p $(dir $@)
 	$(notangle) -R$(@F) $< | cpif $@
 
@@ -36,6 +36,6 @@ $(package)/inst/doc/implementation.tex: $(package)/implementation.rnw
 
 # I like this next rule.  The 'check' file depends on every file that's
 # under version control or unknown in the $(package) subdirectory.
-check: pdf $(Rfiles) $(package)/NAMESPACE $(addprefix $(package)/,$(shell bzr ls $(package)/ -R --unknown -V --kind=file))
+check: pdf $(Rfiles) $(addprefix $(package)/,$(shell bzr ls $(package)/ -R --unknown -V --kind=file))
 	R CMD check $(package)
 	touch $@
