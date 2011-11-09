@@ -1,0 +1,31 @@
+\name{rows}
+\alias{rows}
+\title{Extract rows from a data frame and present as a list}
+\description{A simple function: takes a dataframe x and returns a list
+  where each element is a row of x}
+\usage{
+rows(x)
+}
+
+\arguments{
+  \item{x}{a data frame}
+}
+
+\value{A list; each element is a row of \code{x}.}
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+
+\section{Implementation}{
+<<*>>=
+rows <- function(x) {
+  if (nrow(x) > 0) {lapply(seq.int(nrow(x)), function(i) x[i,])
+  } else {list()}
+}
+@  
+}
+
+\examples{
+##---- Should be DIRECTLY executable !! ----
+##-- ==>  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+}
+\keyword{utilities}
