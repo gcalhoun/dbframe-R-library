@@ -60,7 +60,7 @@ setMethod("!=", c("dbframe", "dbframe"), function(e1, e2)
 @
 }
 
-\seealso{\link{RSQlite}}
+\seealso{RSQlite}
 \examples{
 showClass("dbframe")
 }

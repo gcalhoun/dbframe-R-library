@@ -1,0 +1,53 @@
+\name{head}
+\alias{head.dbframe}
+\alias{tail.dbframe}
+\title{Retrieve head or tail of a table}
+\description{basically works like head or tail for a dbframe.}
+\usage{
+\method{head}{dbframe}{head(x, n = 6L, \dots)}
+
+\method{tail}{dbframe}{head(x, n = 6L, \dots)}
+}
+\arguments{
+  \item{x}{A \code{dbframe} object}
+  \item{n}{The number of records to retrieve.}
+  \item{\dots}{Other arguments to pass to \code{select}}
+}
+
+\details{Fill in}
+\value{Returns a data frame with the records.}
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+
+\section{Implementation}{
+I need to explain what I'm doing at some point:
+
+<<*>>=
+head.dbframe <- function(x, n = 6L, ...) {
+  if (n >= 0) {
+    select(x, limit = n,...)
+  } else {
+    nrec <- select(x, "count(*)")[[1]]
+    select(x, limit = nrec + n,...)
+  }
+}
+@
+
+<<*>>=
+tail.dbframe <- function(x, n = 6L, ...) {
+  nrec <- select(x, "count(*)")[[1]]
+  if (n >= 0) {
+    select(x, limit = sprintf("%d,%d", nrec - n, n),...)
+  } else {
+    select(x, limit = sprintf("%d,%d", -n, nrec + n),...)
+  }
+}
+@
+}
+
+\examples{
+##---- Should be DIRECTLY executable !! ----
+##-- ==>  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+}
+\keyword{database}
+
