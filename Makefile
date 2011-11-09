@@ -6,7 +6,7 @@ Rscript  := Rscript
 latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
 noweave  := noweave
 notangle := notangle
-tord := ~/Desktop/dbframe.bzr/tord
+tord := ~/Desktop/illiterate.bzr/tord
 
 RFLAGS       := --vanilla --slave
 LATEXMKFLAGS := -pdf -silent

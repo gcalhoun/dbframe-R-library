@@ -15,8 +15,10 @@
 }}
 
 \section{Implementation}{
+<<*>>=
 setGeneric("clear", function(..., delete = TRUE, deparse.level = 1)
            standardGeneric("clear"), signature = "...")
+@
 }
 
 \keyword{methods}
