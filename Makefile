@@ -12,9 +12,11 @@ RFLAGS       := --vanilla --slave
 LATEXMKFLAGS := -pdf -silent
 
 Rsource := $(wildcard $(package)/Rdweb/*.Rdw) 
+Rsource2:= $(wildcard $(package)/Rdweb/*.Rd)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
            $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/R/%.R))
 Rdocs   := $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/man/%.Rd)
+Rdocs2  := $(Rsource2:$(package)/Rdweb/%=$(package)/man/%)
 
 .PHONY: all build burn
 
@@ -35,7 +37,9 @@ $(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
 $(Rdocs): $(package)/man/%.Rd: $(package)/Rdweb/%.Rdw
 	$(noweave) -delay -backend $(tord) $< > $@
 
-check: $(Rcode) $(Rdocs)
-	echo $(Rcode) $(Rdocs) $(Rsource)
+$(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
+	cp $< $@
+
+check: $(Rcode) $(Rdocs) $(Rdocs2)
 	R CMD check $(package)
 	touch $@
