@@ -6,36 +6,36 @@ Rscript  := Rscript
 latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
 noweave  := noweave
 notangle := notangle
+tord := ~/Desktop/dbframe.bzr/tord
 
 RFLAGS       := --vanilla --slave
 LATEXMKFLAGS := -pdf -silent
 
-Rfiles := $(patsubst $(package)/man/%.Rd, $(package)/R/%.R, $(wildcard $(package)/man/*.Rd))
+Rsource := $(wildcard $(package)/Rdweb/*.Rdw) 
+Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
+           $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/R/%.R))
+Rdocs   := $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/man/%.Rd)
 
-.PHONY: all build pdf
+.PHONY: all build burn
 
-all: check build install pdf
-pdf: $(package)/inst/doc/implementation.pdf
+all: check build install
 build: $(zipfile)
 $(zipfile): check 
 	R CMD build $(package)
+burn: 
+	rm $(package)/man/* $(package)/R/*
 
 install: $(zipfile)
 	sudo R CMD INSTALL $(package)
 	touch $@
 
-$(Rfiles): $(package)/implementation.rnw
-	mkdir -p $(dir $@)
-	$(notangle) -R$(@F) $< | cpif $@
+$(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
+	$(notangle) $< > $@
 
-%.pdf: %.tex
-	cd $(dir $<) && $(latexmk) $(LATEXMKFLAGS) $(<F)
-$(package)/inst/doc/implementation.tex: $(package)/implementation.rnw
-	mkdir -p $(dir $@)
-	$(noweave) -latex -index -delay $< | cpif $@
+$(Rdocs): $(package)/man/%.Rd: $(package)/Rdweb/%.Rdw
+	$(noweave) -delay -backend $(tord) $< > $@
 
-# I like this next rule.  The 'check' file depends on every file that's
-# under version control or unknown in the $(package) subdirectory.
-check: pdf $(Rfiles) $(addprefix $(package)/,$(shell bzr ls $(package)/ -R --unknown -V --kind=file))
+check: $(Rcode) $(Rdocs)
+	echo $(Rcode) $(Rdocs) $(Rsource)
 	R CMD check $(package)
 	touch $@

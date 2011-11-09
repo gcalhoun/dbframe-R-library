@@ -2,7 +2,7 @@
 \docType{methods}
 \alias{insert<--methods}
 \alias{insert<-,dbframe-method}
-\title{ ~~ Methods for Function \code{insert<-}  ~~}
+\title{Methods for Function \code{insert<-}}
 \description{Inserts data from a data frame to an SQLite table}
 \section{Methods}{
 \describe{
@@ -11,5 +11,25 @@
 %%  ~~describe this method here~~
 }
 }}
+
+\section{Implementation}{
+\preformatted{<*>=
+setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
+setMethod("insert<-", signature = "dbframe", function(x,...,value) \{
+  dbc <- dbConnect(x)
+  cols <- if (dbExistsTable(dbc, sql(x))) \{
+    tablenames <- names(select(x, limit = 0))
+    tablenames[tablenames \%in\% names(value)]
+  \} else \{
+    names(value)
+  \}
+  dbWriteTable(dbc, sql(x), value[, cols, drop=FALSE],
+               row.names = FALSE, overwrite = FALSE, append = TRUE,...)
+  dbDisconnect(dbc)
+  x
+\})
+}
+}
 \keyword{methods}
-\keyword{ ~~ other possible keyword(s) ~~ }
+\keyword{database}
+

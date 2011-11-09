@@ -1,0 +1,23 @@
+\name{clear-methods}
+\docType{methods}
+\alias{clear-methods}
+\alias{clear,dbframe-method}
+\title{Methods for Function \code{clear}}
+\description{
+ ~~ Methods for function \code{clear}  ~~
+}
+\section{Methods}{
+\describe{
+
+\item{\code{signature(... = "dbframe")}}{
+%%  ~~describe this method here~~
+}
+}}
+
+\section{Implementation}{
+setGeneric("clear", function(..., delete = TRUE, deparse.level = 1)
+           standardGeneric("clear"), signature = "...")
+}
+
+\keyword{methods}
+\keyword{database}
