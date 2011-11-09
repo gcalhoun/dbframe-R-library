@@ -58,6 +58,15 @@ setMethod("!=", c("dbframe", "dbframe"), function(e1, e2)
           e1@db != e2@db & e1@sql != e2@sql &
           e1@extensions != e2@extensions)
 @
+
+And a database connection method as well.
+<<*>>=
+setMethod("dbConnect", signature = "dbframe", definition = function(drv,...) {
+  dbc <- dbConnect("SQLite", dbname = db(drv))
+  if (drv@extensions) init_extensions(dbc)
+  dbc
+})
+@
 }
 
 \seealso{RSQlite}
