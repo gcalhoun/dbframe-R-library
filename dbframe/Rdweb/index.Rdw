@@ -29,19 +29,20 @@ index(x, unique = FALSE) <- value
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
 \section{Implementation}{
+Need to debug this guy:
 <<*>>=
-index <- function(x) {
-  dbc <- dbConnect(x)
-  indexdata <- dbGetQuery(dbc, sprintf("
-select name, sql from sqlite_master
-where type='index' and tbl_name='%s';", sql(x)))
-  dbDisconnect(dbc)
-  if (nrow(indexdata) == 0) return(NULL)
-  cols <- lapply(strsplit(indexdata$sql, "\\(|,|\\)"),
-                 function(s) sub("[[:blank:]]", "", s[-1]))
-  names(cols) <- indexdata$name
-  cols
-}
+## index <- function(x) {
+##   dbc <- dbConnect(x)
+##   indexdata <- dbGetQuery(dbc, sprintf("
+## select name, sql from sqlite_master
+## where type='index' and tbl_name='%s';", sql(x)))
+##   dbDisconnect(dbc)
+##   if (nrow(indexdata) == 0) return(NULL)
+##   cols <- lapply(strsplit(indexdata$sql, "\\(|,|\\)"),
+##                  function(s) sub("[[:blank:]]", "", s[-1]))
+##   names(cols) <- indexdata$name
+##   cols
+## }
 @
 
 <<*>>=
@@ -73,20 +74,6 @@ select name from sqlite_master where type='index';"))$name
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,
 ##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function(x) {
-  dbc <- dbConnect(x)
-  indexdata <- dbGetQuery(dbc, sprintf("
-select name, sql from sqlite_master
-where type='index' and tbl_name='\%s';", sql(x)))
-  dbDisconnect(dbc)
-  if (nrow(indexdata) == 0) return(NULL)
-  cols <- lapply(strsplit(indexdata$sql, "\\(|,|\\)"),
-                 function(s) sub("[[:blank:]]", "", s[-1]))
-  names(cols) <- indexdata$name
-  cols
-  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

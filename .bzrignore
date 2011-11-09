@@ -4,6 +4,7 @@ auto/
 *.pdf
 *.tex
 *.toc
+*.dvi
 
 *.tar.gz
 *.Rcheck
