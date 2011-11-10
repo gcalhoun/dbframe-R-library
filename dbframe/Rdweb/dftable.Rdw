@@ -37,23 +37,23 @@ aligndecimals(x, rnd=1)
 
 \section{Implementation}{
 <<*>>=
-## dftable <- function(dframe, align, digits, numberformat = align %in% c("c", "C"),
-##                     tabular.environment = "tabularx", include.rownames = FALSE,
-##                     sanitize.text.function = function(x) x, drop = NULL,...) {
+dftable <- function(dframe, align, digits, numberformat = align %in% c("c", "C"),
+                    tabular.environment = "tabularx", include.rownames = FALSE,
+                    sanitize.text.function = function(x) x, drop = NULL,...) {
 
-##   if (!is.null(drop)) dframe <- dframe[,setdiff(names(dframe), drop)]
-##   dframe[,numberformat] <- lapply(numberformat, function(f) aligndecimals(f))
+  if (!is.null(drop)) dframe <- dframe[,setdiff(names(dframe), drop)]
+  dframe[,numberformat] <- lapply(numberformat, function(f) aligndecimals(f))
   
-##   gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
-##        sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
-##        print(xtable(dframe, align = align, digits = digits,...),
-##              file = "/dev/null", floating = FALSE,
-##              add.to.row = list(pos=list(-1, 0, nrow(dframe)),
-##                command = c("\\toprule", "\\midrule", "\\bottomrule")),
-##              tabular.environment = tabular.environment,
-##              sanitize.text.function = sanitize.text.function,
-##              include.rownames = include.rownames))
-## }
+  gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
+       sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
+       print(xtable(dframe, align = align, digits = digits,...),
+             file = "/dev/null", floating = FALSE,
+             add.to.row = list(pos=list(-1, 0, nrow(dframe)),
+               command = c("\\toprule", "\\midrule", "\\bottomrule")),
+             tabular.environment = tabular.environment,
+             sanitize.text.function = sanitize.text.function,
+             include.rownames = include.rownames))
+}
 @
 
 The next function, [[aligndecimals]], pads the left side of a vector
@@ -62,9 +62,9 @@ in Latex, the decimals are vertically aligned.  It also converts
 dashes to minus signs and puts the numbers in math mode to turn off
 old-style numbering.
 <<*>>=
-## aligndecimals <- function(x, rnd=1)
-##   gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
-##                                                 format(round(x, rnd)))))
+aligndecimals <- function(x, rnd=1)
+  gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
+                                                format(round(x, rnd)))))
 @
 }
 
