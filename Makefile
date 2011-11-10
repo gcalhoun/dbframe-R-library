@@ -44,9 +44,15 @@ $(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
 $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
+## The point of the 'sed' is to replace all of the alltt environments
+## with verbatim ones.  The source code has a lot of '\\\\'
+## constructions, and the standard R documentation toolchain seems to
+## do badly; so I circumvent it and then just replace the problematic
+## terms.
 $(package)-manual.tex: $(Rdocs) $(Rdocs2)
 	$(Rscript) -e 'tools:::.Rd2dvi("$(package)", "$@", "$(package) Documentation", files_or_dir = "$(package)/man", internals=TRUE)'
 	sed -i 's/alltt/verbatim/' $@
+
 %.pdf: %.tex
 	$(R) CMD texi2dvi -c -q -p $<
 
