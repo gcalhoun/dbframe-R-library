@@ -1,5 +1,5 @@
 package := dbframe
-version := 0.2
+version := 0.2.0
 zipfile := $(package)_$(version).tar.gz
 
 Rscript  := Rscript
@@ -40,6 +40,9 @@ $(Rdocs): $(package)/man/%.Rd: $(package)/Rdweb/%.Rdw
 $(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
 	cp $< $@
 
-check: $(Rcode) $(Rdocs) $(Rdocs2)
+$(package)/DESCRIPTION: DESCRIPTION
+	echo 'Version: $(version)' | cat $< - > $@
+
+check: $(Rcode) $(Rdocs) $(Rdocs2) $(package)/DESCRIPTION
 	R CMD check $(package)
 	touch $@
