@@ -1,0 +1,12 @@
+Package: dbframe
+Type: Package
+Title: An R to SQL interface
+Date: 2010-10-02
+Author: Gray Calhoun
+Depends: methods, utils, DBI, RSQLite, RSQLite.extfuns, xtable
+Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
+Description: Some code to conveniently work with databases.
+License: (>= GPL-3)
+LazyLoad: yes
+LazyData: yes
+Version: 0.2.0

@@ -3,6 +3,7 @@ version := 0.2.0
 zipfile := $(package)_$(version).tar.gz
 
 Rscript  := Rscript
+R        := R
 latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
 noweave  := noweave
 notangle := notangle
@@ -18,17 +19,17 @@ Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
 Rdocs   := $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(package)/Rdweb/%=$(package)/man/%)
 
-.PHONY: all build burn
+.PHONY: all build burn pdf
 
-all: check build install
+all: check build install pdf
 build: $(zipfile)
 $(zipfile): check 
-	R CMD build $(package)
+	$(R) CMD build $(package)
 burn: 
 	rm $(package)/man/* $(package)/R/*
-
+pdf: $(package)-manual.pdf
 install: $(zipfile)
-	sudo R CMD INSTALL $(package)
+	sudo $(R) CMD INSTALL --no-docs --debug $(package)
 	touch $@
 
 $(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
@@ -43,6 +44,12 @@ $(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
 $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
+$(package)-manual.tex: $(Rdocs) $(Rdocs2)
+	$(Rscript) -e 'tools:::.Rd2dvi("$(package)", "$@", "$(package) Documentation", files_or_dir = "$(package)/man", internals=TRUE)'
+	sed -i 's/alltt/verbatim/' $@
+%.pdf: %.tex
+	$(R) CMD texi2dvi -c -q -p $<
+
 check: $(Rcode) $(Rdocs) $(Rdocs2) $(package)/DESCRIPTION
-	R CMD check $(package)
+	$(R) CMD check --no-manual --use-gct --use-valgrind $(package)
 	touch $@
