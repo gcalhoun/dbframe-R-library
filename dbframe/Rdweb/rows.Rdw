@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{rows}
 \alias{rows}
 \title{Extract rows from a data frame and present as a list}

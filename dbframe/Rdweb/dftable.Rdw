@@ -1,5 +1,8 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{dftable}
 \alias{dftable}
+\alias{publictable}
+\alias{publictable-methods}
 \alias{aligndecimals}
 \title{Construct a nice table from a data frame}
 \description{Constructs an attractive LaTeX table (that uses booktabs)
@@ -36,6 +39,31 @@ aligndecimals(x, rnd=1)
 \examples{### add later}
 
 \section{Implementation}{
+In my research, I usually collect simulation results in the table of
+some database.  Summarizing the results then amounts to running a
+query to aggregate that data, and then plot or tabulate that query's
+ersults.  The [[publictable]] function does this and formats the table
+to look nice in Latex, using Latex's ``booktabs'' package and the
+[[xtable]] library.  The implementation is straightforward.
+<<*>>=
+setGeneric("publictable", function(object,...)
+  standardGeneric("publictable"))
+
+setMethod("publictable", signature = c("data.frame"),
+          function(object,...) dftable(object,...))
+@
+There's one slightly tricky thing about the \code{dbframe} method: I
+let the elipsis to pass arguments to both the \code{select} statement
+and to the call on the resulting data frame.
+<<*>>=
+setMethod("publictable", signature = c("dbframe"),
+          function(object,...) {
+            arguments <- list(...)
+            arguments$dframe <- do.call("select", c(x = object, arguments))
+            do.call("dftable", arguments)
+          })
+@
+
 <<*>>=
 dftable <- function(dframe, align, digits, numberformat = align %in% c("c", "C"),
                     tabular.environment = "tabularx", include.rownames = FALSE,
@@ -68,4 +96,5 @@ aligndecimals <- function(x, rnd=1)
 @
 }
 
+\keyword{methods}
 \keyword{printing}

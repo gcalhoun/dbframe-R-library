@@ -1,59 +1,3 @@
-\name{select-methods}
-\docType{methods}
-\alias{select-methods}
-\alias{select,dbframe,character-method}
-\alias{select,dbframe,list-method}
-\alias{select,dbframe,missing-method}
-\alias{select,list,character-method}
-\alias{select}
-\title{ ~~ Methods for Function \code{select}  ~~}
-\description{
- ~~ Methods for function \code{select}  ~~
-}
-\section{Methods}{
-\describe{
-
-\item{\code{signature(x = "dbframe", cols = "character")}}{
-%%  ~~describe this method here~~
-}
-
-\item{\code{signature(x = "dbframe", cols = "list")}}{
-%%  ~~describe this method here~~
-}
-
-\item{\code{signature(x = "dbframe", cols = "missing")}}{
-%%  ~~describe this method here~~
-}
-
-\item{\code{signature(x = "list", cols = "character")}}{
-%%  ~~describe this method here~~
-}
-}}
-
-\section{Implementation}{
-<<*>>=
-setGeneric("select", function(x, cols, ...) standardGeneric("select"))
-@
-
-<<*>>=
-setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
-  dbc <- dbConnect(x)
-  d <- dbGetQuery(dbc, selectSQL(sql(x),...))
-  dbDisconnect(dbc)
-  d
-})
-@
-
-<<*>>=
-setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
-  dbc <- dbConnect(x)
-  d <- dbGetQuery(dbc, selectSQL(sql(x), cols, ...))
-  dbDisconnect(dbc)
-  d
-})
-@
-
-<<*>>=
 setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   if (length(x) == 1) return(select(x[[1]], cols,...))
   if (is.null(names(x)))
@@ -108,9 +52,8 @@ setMethod("select", signature = c("list", "character"), function(x, cols,...) {
   dbDisconnect(dbc)
   d
 })
-@
 
-<<*>>=
+
 setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
   if (length(cols) == 1) return(select(x, cols[[1]],...))
   
@@ -154,25 +97,22 @@ setMethod("select", signature = c("dbframe", "list"), function(x, cols,...) {
   dbDisconnect(dbc)
   d
 })
-@
 
-<<*>>=
+
+
 extractArg <- function(name, default, lengthReq, arglist) {
   v <- if (name %in% names(arglist)) arglist[[name]] else default
   if (is.na(lengthReq) | length(v) == lengthReq) return(v)
   else if (length(v) == 1) return(rep(v, lengthReq))
   else stop("Incorrect length of argument")
 }
-@
 
-<<*>>=
+
+
 tableSQL <- function(tablenames, join, on, using) {
   paste(tablenames[1], names(tablenames)[1],
         paste(join, tablenames[-1], names(tablenames)[-1], 
               c(ifelse(is.na(on), paste("using(", using, ")", sep = ""),
                        paste("on", on)))))
 		     }
-@
-}
-\keyword{methods}
-\keyword{database}
+

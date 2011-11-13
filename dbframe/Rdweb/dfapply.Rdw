@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{dfapply}
 \alias{dfapply}
 \alias{pdfapply}
