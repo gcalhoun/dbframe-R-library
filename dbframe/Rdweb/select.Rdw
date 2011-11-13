@@ -47,10 +47,10 @@ generate.select.sql(tablesql, cols = "*", where = NULL, group.by = NULL, having 
 <<*>>=
 <<Define the function that writes SQL commands>>
 setGeneric("select", function(x, cols, ...) standardGeneric("select"))
-setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...)
-          <<Execute select for c("dbframe", "missing")>>)
-setMethod("select", signature = c("dbframe", "character"), function(x, cols,...)
-          <<Execute select for c("dbframe", "character")>>)
+setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
+          <<Execute select for c("dbframe", "missing")>>})
+setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
+          <<Execute select for c("dbframe", "character")>>})
 @
 
 <<Define the function that writes SQL commands>>=
@@ -111,7 +111,7 @@ where    <- if (is.null(where)) "" else paste("where", where)
 limit    <- if (is.null(limit)) "" else paste("limit", limit)
 @ 
 
-<<Execute select for c("dbframe", "missing)">>=
+<<Execute select for c("dbframe", "missing")>>=
 dbc <- dbConnect(x)
 d <- dbGetQuery(dbc, generate.select.sql(sql(x),...))
 dbDisconnect(dbc)
