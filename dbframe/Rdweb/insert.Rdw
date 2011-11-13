@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{insert<-}
 \alias{insert<-}
 \alias{insert<--methods}

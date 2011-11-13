@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{head}
 \alias{head.dbframe}
 \alias{tail.dbframe}

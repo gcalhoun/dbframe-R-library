@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{dbframe-class}
 \Rdversion{1.1}
 \docType{class}
