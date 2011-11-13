@@ -48,7 +48,7 @@ whether the table already exists in the database.  If it does, we
 find out which columns in [[value]] already exists, because we will
 only insert those columns into the database.  If the table does not
 exist, we insert all of the columns of [[value]].
-<<Determine whether the table exists already>>=
+<<Connect to database and determine whether the table exists>>=
 dbc <- dbConnect(x)
 cols <- if (dbExistsTable(dbc, sql(x))) {
   tablenames <- names(select(x, limit = 0))
@@ -63,7 +63,7 @@ Writing to the database is straightforward---we just use the
 frame [[value]] are rearranged to agree with the table in the
 database automatically by indexing [[value]] with the vector
 [[cols]] determined above.
-<<Write to the database and disconnect>>=
+<<Write to database and disconnect>>=
 dbWriteTable(dbc, sql(x), value[, cols, drop=FALSE],
              row.names = FALSE, overwrite = FALSE, append = TRUE,...)
 dbDisconnect(dbc)

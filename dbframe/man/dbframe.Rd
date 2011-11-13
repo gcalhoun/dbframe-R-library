@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{dbframe}
 \alias{dbframe}
 \title{Create a \code{dbframe} object}
