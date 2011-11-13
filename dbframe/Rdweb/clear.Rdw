@@ -3,64 +3,37 @@
 \alias{clear}
 \alias{clear-methods}
 \title{Remove a table from the database}
-\description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
-}
-\usage{
-clear(..., delete = TRUE, deparse.level = 1)
-}
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
-}
-  \item{delete}{
-%%     ~~Describe \code{delete} here~~
-}
-  \item{deparse.level}{
-%%     ~~Describe \code{deparse.level} here~~
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
+\description{Deletes a table referenced by by a \code{dbframe} object.}
+\usage{clear(...)}
+\arguments{\item{\dots}{Each argument should be a dbframe object.}}
 
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
 \section{Implementation}{
 <<*>>=
-setGeneric("clear", function(..., delete = TRUE, deparse.level = 1)
+setGeneric("clear", function(...)
            standardGeneric("clear"), signature = "...")
-@
-<<*>>=
-setMethod("clear", signature = "dbframe", function(..., delete = TRUE,
-                     deparse.level = 1) {
+setMethod("clear", signature = "dbframe", function(...) {
   x <- list(...)
-  if (!all(sapply(x, function(y) is(y, "dbframe")))) stop("All arguments must be dbframes")
-  sapply(x, function(y) {
-    dbc <- dbConnect(y)
-    ## remove the table from the corresponding database if it's there
-    res <- if (sql(y) %in% dbListTables(dbc)) {
-      dbRemoveTable(dbc, sql(y),...)
-    } else {
-      FALSE
-    }
-    dbDisconnect(dbc)
-    ## I'd like to add code to remove the variable from the
-    ## environment where 'clear' was called
-    
-    ## if (delete) remove(y, environment = sys.parent(2))
-    res
-  })
+  <<Check that all arguments have the correct type>>
+  sapply(x, function(y) <<Remove table referenced by "y" from database>>)
 })
 @  
+
+<<Remove table referenced by "y" from database>>=
+{ dbc <- dbConnect(y)
+  res <- if (sql(y) %in% dbListTables(dbc)) {
+    dbRemoveTable(dbc, sql(y),...)
+  } else {
+    FALSE
+  }
+  dbDisconnect(dbc) }
+@
+
+<<Check that all arguments have the correct type>>=
+if (!all(sapply(x, function(y) is(y, "dbframe")))) 
+  stop("All arguments must be dbframes")
+@ 
 }
 
 \examples{

@@ -56,7 +56,7 @@ $(package)-manual.tex: $(Rdocs) $(Rdocs2)
 %.pdf: %.tex
 	$(R) CMD texi2dvi -c -q -p $<
 
-check: $(Rcode) $(Rdocs) $(Rdocs2) $(package)/DESCRIPTION
+check: $(Rcode) $(Rdocs) $(Rdocs2) $(package)/DESCRIPTION $(package)/NAMESPACE
 ##	$(R) CMD check --no-manual --use-gct --use-valgrind $(package)
 	$(R) CMD check --no-manual $(package)
 	touch $@

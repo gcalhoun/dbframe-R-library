@@ -8,6 +8,9 @@
 \alias{db,dbframe-method}
 \alias{extensions,dbframe-method}
 \alias{sql,dbframe-method}
+\alias{sql}
+\alias{db}
+\alias{extensions}
 
 \title{Class \code{"dbframe"}}
 \description{Fill in description}
