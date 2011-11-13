@@ -45,8 +45,6 @@ Knuth, Donald E., Literate Programming. \emph{The Computer Journal},
 \bold{27}(2):97--111, 1984.
 }
 
-\seealso{\code{\link{DBI}}, \code{\link{RSQLite}}, \code{\link{select}},
-\code{\link{insert}}}
 \examples{## Add later}
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \keyword{package}

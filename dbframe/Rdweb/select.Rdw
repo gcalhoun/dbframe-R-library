@@ -1,13 +1,12 @@
 % -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{select}
-\docType{methods}
 \alias{select}
 \alias{select-methods}
 \alias{select,dbframe,character-method}
 \alias{select,dbframe,list-method}
 \alias{select,dbframe,missing-method}
 \alias{select,list,character-method}
-\alias{select}
+\alias{generate.select.sql}
 \title{Retrieve records from a dbframe}
 \description{Does it.}
 

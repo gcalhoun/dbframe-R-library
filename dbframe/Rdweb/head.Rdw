@@ -5,9 +5,9 @@
 \title{Retrieve head or tail of a table}
 \description{basically works like head or tail for a dbframe.}
 \usage{
-\method{head}{dbframe}{head(x, n = 6L, \dots)}
+head(x, n = 6L, \dots)
 
-\method{tail}{dbframe}{head(x, n = 6L, \dots)}
+tail(x, n = 6L, \dots)
 }
 \arguments{
   \item{x}{A \code{dbframe} object}
