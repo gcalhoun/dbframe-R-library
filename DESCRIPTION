@@ -6,6 +6,6 @@ Author: Gray Calhoun
 Depends: methods, utils, DBI, RSQLite, RSQLite.extfuns, xtable
 Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
 Description: Some code to conveniently work with databases.
-License: (>= GPL-3)
+License: GPL (>= 3)
 LazyLoad: yes
 LazyData: yes
