@@ -13,6 +13,8 @@ dftable(dframe, align, digits, numberformat = align \%in\% c("c", "C"),
         sanitize.text.function = function(x) x, drop = NULL,...)
 
 aligndecimals(x, rnd=1)
+
+publictable(...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -70,7 +72,9 @@ dftable <- function(dframe, align, digits, numberformat = align %in% c("c", "C")
                     sanitize.text.function = function(x) x, drop = NULL,...) {
 
   if (!is.null(drop)) dframe <- dframe[,setdiff(names(dframe), drop)]
-  dframe[,numberformat] <- lapply(numberformat, function(f) aligndecimals(f))
+  
+  dframe[,numberformat[-1]] <- lapply(dframe[, numberformat[-1], drop = FALSE],
+                                  function(f) aligndecimals(f))
   
   gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
        sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
