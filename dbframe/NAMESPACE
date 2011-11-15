@@ -1,4 +1,5 @@
-export(rows, clear, db, extensions, "insert<-", publictable, sql)
+export(dbframe, rows, clear, db, extensions, "insert<-",
+       publictable, sql, select)
 exportClasses(dbframe)
 importFrom(utils, head, tail)
 S3method(head, dbframe)
