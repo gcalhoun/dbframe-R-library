@@ -22,7 +22,7 @@
   to be executed again.  This package is my attempt automate this sort
   of routine use of \acronym{SQL}.  I've tried to make the syntax look
   more \dQuote{R-like} than, eg, DBI.  Please let me know if you have
-  any suggestions for functionality or appearance.
+  any suggestions for functionality, appearance, or syntax.
 
   \subsection{Queries}{So far, I've just implemented \code{insert} and
     \code{select} queries.  \code{insert} allows you to insert new
@@ -45,7 +45,14 @@ Knuth, Donald E., Literate Programming. \emph{The Computer Journal},
 \bold{27}(2):97--111, 1984.
 }
 
-\examples{## Add later}
+\examples{
+\dontrun{
+example.dbframe <- dbframe("table1", "/tmp/example.db")
+data(chickwts)
+insert(example.dbframe) <- chickwts
+select(example.dbframe, "avg(weight)", group.by = "feed")
+}
+}
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \keyword{package}
 \keyword{database}
