@@ -18,3 +18,6 @@ check
 install
 dbframe/inst
 dbframe/AllRefs.bib
+dbframe/DESCRIPTION
+dbframe/R
+dbframe/man
