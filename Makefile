@@ -33,12 +33,15 @@ install: $(zipfile)
 	touch $@
 
 $(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
+	mkdir -p $(package)/R
 	$(notangle) $< > $@
 
 $(Rdocs): $(package)/man/%.Rd: $(package)/Rdweb/%.Rdw
+	mkdir -p $(package)/man
 	$(noweave) -delay -backend $(tord) $< > $@
 
 $(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
+	mkdir -p $(package)/man
 	cp $< $@
 
 $(package)/DESCRIPTION: DESCRIPTION
