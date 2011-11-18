@@ -18,18 +18,18 @@ Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
            $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/R/%.R))
 Rdocs   := $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(package)/Rdweb/%=$(package)/man/%)
+Rtests  := $(wildcard $(package)/tests/*.R) $(wildcard $(package)/inst/tests/*.R)
 
-.PHONY: all build burn pdf
+.PHONY: all build burn pdf zip
 
-all: check build install pdf
-build: $(zipfile)
+all: check zip install
+zip: $(zipfile)
 $(zipfile): check 
 	$(R) CMD build $(package)
 burn: 
 	rm $(package)/man/* $(package)/R/*
-pdf: $(package)-manual.pdf
-install: $(zipfile)
-	sudo $(R) CMD INSTALL --no-docs --debug $(package)
+install: check
+	sudo $(R) CMD INSTALL --debug $(package)
 	touch $@
 
 $(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
@@ -47,19 +47,10 @@ $(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
 $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
-## The point of the 'sed' is to replace all of the alltt environments
-## with verbatim ones.  The source code has a lot of '\\\\'
-## constructions, and the standard R documentation toolchain seems to
-## do badly; so I circumvent it and then just replace the problematic
-## terms.
-$(package)-manual.tex: $(Rdocs) $(Rdocs2)
-	$(Rscript) -e 'tools:::.Rd2dvi("$(package)", "$@", "$(package) Documentation", files_or_dir = "$(package)/man", internals=TRUE)'
-	sed -i 's/alltt/verbatim/' $@
-
 %.pdf: %.tex
 	$(R) CMD texi2dvi -c -q -p $<
 
-check: $(Rcode) $(Rdocs) $(Rdocs2) $(package)/DESCRIPTION $(package)/NAMESPACE
+check: $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION $(package)/NAMESPACE
 ##	$(R) CMD check --no-manual --use-gct --use-valgrind $(package)
-	$(R) CMD check --no-manual $(package)
+	$(R) CMD check $(package)
 	touch $@
