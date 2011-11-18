@@ -50,8 +50,7 @@ Knuth, Donald E., Literate Programming. \emph{The Computer Journal},
 example.dbframe <- dbframe("table1", "/tmp/example.db")
 data(chickwts)
 insert(example.dbframe) <- chickwts
-select(example.dbframe, "avg(weight)", group.by = "feed")
-}
+select(example.dbframe, "avg(weight)", group.by = "feed")}
 }
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \keyword{package}
