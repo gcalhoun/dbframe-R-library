@@ -2,14 +2,13 @@ package := dbframe
 version := 0.2.1
 zipfile := $(package)_$(version).tar.gz
 
-Rscript  := Rscript
-R        := R
+RD       := /home/gcalhoun/Desktop/R-devel/build/bin/R
+RR       := /home/gcalhoun/Desktop/R-devel/R-2-14-branch/bin/R
 latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
 noweave  := noweave
 notangle := notangle
 tord := ~/Desktop/illiterate.bzr/tord
 
-RFLAGS       := --vanilla --slave
 LATEXMKFLAGS := -pdf -silent
 
 Rsource := $(wildcard $(package)/Rdweb/*.Rdw) 
@@ -25,11 +24,12 @@ Rtests  := $(wildcard $(package)/tests/*.R) $(wildcard $(package)/inst/tests/*.R
 all: check zip install
 zip: $(zipfile)
 $(zipfile): check 
-	$(R) CMD build $(package)
+	$(RR) CMD build $(package)
 burn: 
 	rm $(package)/man/* $(package)/R/*
 install: check
-	sudo $(R) CMD INSTALL --debug $(package)
+	sudo $(RR) CMD INSTALL --debug $(package)
+	sudo $(RD) CMD INSTALL --debug $(package)
 	touch $@
 
 $(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
@@ -48,9 +48,9 @@ $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
 %.pdf: %.tex
-	$(R) CMD texi2dvi -c -q -p $<
+	$(RR) CMD texi2dvi -c -q -p $<
 
 check: $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION $(package)/NAMESPACE
-##	$(R) CMD check --no-manual --use-gct --use-valgrind $(package)
-	$(R) CMD check $(package)
+	$(RR) CMD check $(package)
+	$(RD) CMD check $(package)
 	touch $@
