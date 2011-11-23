@@ -8,82 +8,107 @@
 \alias{select,list,character-method}
 \alias{generate.select.sql}
 \title{Retrieve records from a dbframe}
-\description{Does it.}
+
+\description{[[select]] is a wrapper for the SQL select query and is
+  used to retrieve records from a [[dbframe]] object.
+  [[generate.select.sql]] assembles a valid SQL select statement from
+  its arguments.  The arguments map to clauses in the SQL select
+  statement, so you may need to consult an introduction to SQL to best
+  use these functions.}
 
 \usage{
-generate.select.sql(tablesql, cols = "*", where = NULL, group.by = NULL, having = NULL, order.by = NULL, limit = NULL, ...)
-}
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{tablesql}{
-%%     ~~Describe \code{tablesql} here~~
-}
-  \item{cols}{
-%%     ~~Describe \code{cols} here~~
-}
-  \item{where}{
-%%     ~~Describe \code{where} here~~
-}
-  \item{group.by}{
-%%     ~~Describe \code{group.by} here~~
-}
-  \item{having}{
-%%     ~~Describe \code{having} here~~
-}
-  \item{order.by}{
-%%     ~~Describe \code{order.by} here~~
-}
-  \item{limit}{
-%%     ~~Describe \code{limit} here~~
-}
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
-}
+select(x, cols,...)
+
+generate.select.sql(table, cols = "*", where = NULL, group.by = NULL, 
+                    having = NULL, order.by = NULL, limit = NULL, ...)
 }
 
+\arguments{
+  \item{x}{A [[dbframe]] object that references the table of interest.}
+  \item{table}{A character object containing the name of the SQL table to query.}
+  \item{cols}{A character vector containing the column names (or
+    functions of the column names) to retrieve from the database.}
+  \item{where}{A character object that contains conditions to use to
+    filter the records.}
+  \item{group.by}{A character vector that defines groups of records to
+    combine with an aggregate function.}
+  \item{having}{A character object that filters the groups defined by \dQuote{group.by}.}
+  \item{order.by}{A character vector that lists the columns to be used
+    for sorting the results.}
+  \item{limit}{A character vector or number that limits and offsets the
+    SQL query results.}
+  \item{\dots}{Additional arguments to pass to [[dbGetQuery]]}.
+}
+
+\references{
+SQL as understood by SQLite. \url{http://www.sqlite.org/lang_select.html}
+}
 
 \section{Implementation}{
+The inidividual methods do some minor parsing, but most of the work is
+done by [[generate.select.sql]].
+  
 <<*>>=
-<<Define the function that writes SQL commands>>
-setGeneric("select", function(x, cols, ...) standardGeneric("select"))
-setMethod("select", signature = c("dbframe", "missing"), function(x, cols,...) {
-          <<Execute select for c("dbframe", "missing")>>})
-setMethod("select", signature = c("dbframe", "character"), function(x, cols,...) {
-          <<Execute select for c("dbframe", "character")>>})
-@
+generate.select.sql <- function(table, cols = "*", where = NULL, 
+  group.by = NULL, having = NULL, order.by = NULL, limit = NULL, ...) {
 
-<<Define the function that writes SQL commands>>=
-generate.select.sql <- function(tablesql, cols = "*", where = NULL, group.by = NULL,
-                      having = NULL, order.by = NULL, limit = NULL, ...) {
-  <<Write the "select" part of the statement>>
-  <<Write the "group by" part of the statement>>
-  <<Write the "order by" part of the statement>>
-  <<Write the "having" part of the statement>>
-  <<Write the "where" part of the statement>>
-  <<Write the "limit" part of the statement>>
-  return(paste("select", cols, "from", tablesql, where, 
+  <<Format the "select" part of the statement>>
+  <<Format the "group by" part of the statement>>
+  <<Format the "order by" part of the statement>>
+  <<Format the "having" part of the statement>>
+  <<Format the "where" part of the statement>>
+  <<Format the "limit" part of the statement>>
+  return(paste("select", cols, "from", table, where, 
                group.by, having, order.by, limit))
 }
-@  
 
-Original comments:
+setGeneric("select", function(x, cols, ...) standardGeneric("select"))
+setMethod("select", signature = c("dbframe", "missing"), 
+          function(x, cols,...) {
+            <<Execute select for c("dbframe", "missing")>>})
+setMethod("select", signature = c("dbframe", "character"), 
+          function(x, cols,...) {
+            <<Execute select for c("dbframe", "character")>>})
+@
 
-add elements of the 'group.by' vector that aren't already in cols to
-the select statement.  The sapply part looks for group.by elements
-that are at the beginning of a select statement, so that it recognizes
-things like: cols = "m.s as THEs", group.by = "m.s"
-<<Write the "select" part of the statement>>=
-if ((length(cols) == 1) && (nchar(cols) == 0)) cols <- NULL
+\subsection{Assembling the SQL select statement}{
+To write the "select" part, we add the [[group.by]] variables and the
+[[cols]] variables together (and store them in [[cols]]).
+<<Format the "select" part of the statement>>=
+<<Nullify cols variable if it is undefined>>
 cols <- if (is.null(group.by)) {
   paste(cols, collapse = ", ")
 } else {
-  paste(c(group.by[!sapply(group.by, function(g)
-                           g %in% substr(cols, 1, nchar(g)))], cols),
-        collapse = ", ")
+  <<Paste new group.by variables in front of cols variables>>
 }
 @ 
+To save typing, I assume that we want to retrieve the grouping variables
+and so we don't have to specify them explicitly in the [[cols]] vector.
+I think it makes sense to ahve the grouping variables on the left side
+of the results set instead of the right side.  The next code chunk does
+both of those.  It's a little awkward because we only want to add
+[[group.by]] variables that are not already represented in the [[cols]]
+vector; in some cases [[cols]] might contain a renamed or transformed
+[[group.by]] variable.  The code tries to be a little smart about those
+things, but could probably be improved.
+<<Paste new group.by variables in front of cols variables>>=
+paste(collapse = ", ", 
+      c(group.by[!sapply(group.by, function(g)
+                         g %in% substr(cols, 1, nchar(g)))], cols))
+@ 
+Setting [[cols]] to [[NULL]] if it doesn't contain a "real" character
+string ensures that paste does the right thing.  We might want do set
+[[cols]] to "" if we only wanted to return variables specified in
+[[group.by]].
+<<Nullify cols variable if it is undefined>>=
+if ((length(cols) == 1) && (nchar(cols) == 0)) cols <- NULL
+@ 
 
-<<Write the "group by" part of the statement>>=
+Managing the other arguments is easy.  If they're [[NULL]] we replace
+the variable with an empty string; if they're not, we add the
+appropriate label and replace the variable with a character object that
+contains a clause for the SQL statement.
+<<Format the "group by" part of the statement>>=
 group.by <- 
   if (is.null(group.by)) {
     "" 
@@ -92,37 +117,72 @@ group.by <-
   }
 @ 
 
-<<Write the "order by" part of the statement>>=
-order.by <- if (is.null(order.by)) "" else {
-  paste("order by", paste(order.by, collapse = ", "))
+<<Format the "order by" part of the statement>>=
+order.by <- 
+  if (is.null(order.by)) {
+    ""
+  } else {
+    paste("order by", paste(order.by, collapse = ", "))
+  }
+@ 
+
+<<Format the "having" part of the statement>>=
+having <-
+  if (is.null(having)) {
+    ""
+ } else {
+   paste("having", having)
+ }
+@ 
+
+<<Format the "where" part of the statement>>=
+where <-
+  if (is.null(where)) {
+    "" 
+  } else {
+    paste("where", where)
+  }
+@ 
+
+<<Format the "limit" part of the statement>>=
+limit <- 
+  if (is.null(limit)) {
+    "" 
+  } else {
+    paste("limit", limit)
+  }
+@ 
 }
-@ 
-
-<<Write the "having" part of the statement>>=
-having   <- if (is.null(having)) "" else paste("having", having)
-@ 
-
-<<Write the "where" part of the statement>>=
-where    <- if (is.null(where)) "" else paste("where", where)
-@ 
-
-<<Write the "limit" part of the statement>>=
-limit    <- if (is.null(limit)) "" else paste("limit", limit)
-@ 
-
-<<Execute select for c("dbframe", "missing")>>=
-dbc <- dbConnect(x)
-d <- dbGetQuery(dbc, generate.select.sql(sql(x),...))
-dbDisconnect(dbc)
-return(d)
-@ 
-
+\subsection{Details of argument handling}{
+  The individual methods just call [[generate.select.sql]] and execute
+  the select statement.  
 <<Execute select for c("dbframe", "character")>>=
 dbc <- dbConnect(x)
-d <- dbGetQuery(dbc, generate.select.sql(sql(x), cols, ...))
+d <- dbGetQuery(dbc, generate.select.sql(table(x), cols, ...))
 dbDisconnect(dbc)
 return(d)
 @
+
+If [[cols]] is "missing" it returns results for
+[[cols]] equal to "*" (i.e. all of the columns of the table).
+<<Execute select for c("dbframe", "missing")>>=
+dbc <- dbConnect(x)
+d <- dbGetQuery(dbc, generate.select.sql(table(x),...))
+dbDisconnect(dbc)
+return(d)
+@ 
+}}
+
+\examples{
+filename <- "/tmp/example.db"
+data(chickwts)
+chicksdb <- dbframe("cluck2", dbname = filename, 
+                    clear = TRUE, data = chickwts)
+select(chicksdb, where = "weight > 200", order.by = "weight")
+select(chicksdb, "avg(weight) as AverageWeight", group.by = "feed",
+       having = "AverageWeight > 250")
+
 }
+
 \keyword{methods}
 \keyword{database}

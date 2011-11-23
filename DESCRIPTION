@@ -3,8 +3,8 @@ Type: Package
 Title: An R to SQL interface
 Date: 2010-10-02
 Author: Gray Calhoun
-Depends: methods, utils, DBI, RSQLite, RSQLite.extfuns, xtable
-Suggests: testthat, stringr, plyr, evaluate, mutatr, digest
+Depends: methods, utils, DBI, xtable
+Suggests: testthat, RSQLite, RSQLite.extfuns
 Maintainer: Gray Calhoun <gcalhoun@iastate.edu>
 Description: Some code to conveniently work with databases.
 License: GPL (>= 3)

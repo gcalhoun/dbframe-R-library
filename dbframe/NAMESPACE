@@ -1,6 +1,10 @@
-export(dbframe, rows, clear, db, extensions, "insert<-",
-       publictable, sql, select)
-exportClasses(dbframe)
+export(booktabs, clear, dbframe, dbname,
+       "insert<-", readonly, rows, select, table)
+exportClasses(dbframe, dbframe_sqlite, dbframe_unknown)
+importMethodsFrom(DBI, dbConnect)
+exportMethods(dbConnect)
 importFrom(utils, head, tail)
 S3method(head, dbframe)
 S3method(tail, dbframe)
+S3method(as.data.frame, dbframe)
+S3method(nrow, dbframe)

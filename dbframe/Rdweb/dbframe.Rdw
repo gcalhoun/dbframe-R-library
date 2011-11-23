@@ -1,40 +1,135 @@
-% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+% -*- mode: noweb; noweb-default-doc-mode: Rd-mode; noweb-default-code-mode: R-mode -*-
 \name{dbframe}
 \alias{dbframe}
+\alias{dbframe_sqlite}
+\alias{dbframe_unknown}
 \title{Create a \code{dbframe} object}
-\description{Creates a new \code{dbframe} object.}
+\description{This is a constructor for the dbframe class.  I've only
+  made a constructor for SQLite databases, but will (probably) add
+  others in the future.}
 
 \usage{
-dbframe(table, dbname, data = NULL, extensions = TRUE, ...)
+dbframe(table, dbdriver = "SQLite", data = NULL, 
+        readonly = FALSE, clear = FALSE,...)
+dbframe_sqlite(table, dbname, readonly = FALSE,...)
+dbframe_unknown(table,..., readonly = FALSE)
 }
 \arguments{
-  \item{table}{Name of the SQLite table.}
+  \item{table}{A character string.  This will typically be the name of the table in the
+      SQLite database, but it can also be the name of a view, or an SQL
+      select statement that defines a query.}
+  \item{dbdriver}{The name of the database driver to use.  Right now,
+    only "SQLite" is supported.}
   \item{dbname}{Name of the SQLite database.}
-  \item{data}{An optional data frame to insert into the SQLite table.}
-  \item{extensions}{Logical; should the RSQLite extensions be enabled?}
-  \item{\dots}{Optional arguments (currently unused).}
+  \item{data}{An optional data frame to insert into the table.}
+  \item{readonly}{Logical: prevent the user from inserting or clearing
+    the linked table.}
+  \item{clear}{Logical: if the table already exists, should it be
+      removed before making the link?}
+  \item{\dots}{Optional arguments.}
 }
-\details{Fill in details later}
-\value{Returns a \code{dbframe} object.}
-\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
-\seealso{\code{\link{dbframe-class}}}
 
-\section{Implementation}{
+\details{This function constructs a new [[dbframe]] objet referencing
+  the table \dQuote{table} in the database file \dQuote{dbname}.  If
+  the argument [[data]] is not null, its values are inserted into the
+  table.  If [[clear]] is [[TRUE]], any existing version of the table
+  is removed first.}  \value{Returns a \code{dbframe} object.  For
+  SQLite, the extended math functions are enabled.
+
+  I'll repeat this a few times throughout the documentation, but
+  [[dbframe_unknown]] is a blind guess at a general way to implement a
+  generic constructor.  It may or may not work, and I haven't tested it
+  yet.  The optional arguments are stored (in a list) as a slot of the
+  [[dbframe_unknown]] object and are passed to [[dbConnect]].  If you
+  use it (successfully or unsuccessfully), please let me know and
+  suggest changes/improvements.
+  }
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+\seealso{\code{\link{dbframe-class}}, \code{\link{clear}}, \code{\link{insert<-}}}
+
+\section{Implementation}{These functions are pretty simple; [[dbframe]]
+creates a new object corresponding to \dQuote{dbdriver} and then removes
+or inserts data to the table according to the arguments.  If
+\dQuote{dbdriver} hasn't been implemented yet, we initialize a
+\dQuote{dbframe_unknown} object that will try to guess how to open a
+connection to the database (I have no idea if this will work well or
+not; if you use it, please be careful and give me feedback on how well
+it goes).
 <<*>>=
-dbframe <- function(table, dbname, data = NULL, extensions = TRUE,...) {
-  x <- new("dbframe", db = dbname, sql = table, extensions = extensions)
-  if (!is.null(data)) insert(x) <- as.data.frame(data)
+dbframe <- function(table, dbdriver = "SQLite", data = NULL,
+                    readonly = FALSE, clear = FALSE,...) {
+  x <- switch(dbdriver, 
+              "SQLite" = dbframe_sqlite(table, readonly,...),
+              dbframe_unknown(table, readonly,...))
+  <<Clear old table if appropriate>>
+  <<Insert new data into table>>
   return(x)
 }
-@
-}
 
-\section{Unit tests}{
-  Add some test code if you can think of it.
+<<Define [[dbframe_sqlite]]>>
+<<Define [[dbframe_unknown]]>>
+@ 
+
+
+<<Clear old table if appropriate>>=
+if (clear) clear.result <- clear(x)
+@
+<<Insert new data into table>>=
+if (!is.null(data)) insert(x) <- as.data.frame(data)
+@
+
+[[dbframe_sqlite]] makes sure that the right [[RSQLite]] libraries are
+loaded and creates a new [[dbframe_sqlite]] object.
+<<Define [[dbframe_sqlite]]>>=
+dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
+  <<Load SQLite libraries>>
+  return(new("dbframe_sqlite", table = table,
+             readonly = readonly, dbname = dbname))
+}
+@
+
+The [[dbframe]] package only suggests the [[RSQLite]] and
+[[RSQLite.extfuns]] packages; it doesn't depend formally on them.
+Consequently those packages aren't loaded when [[dbframe]] is first
+load; I put off loading those packages until it is clear that the user
+wants to interface with an SQLite database, which happens when a
+[[dbframe_sqlite]] object is created.  As things stand now, this delay
+doesn't do very much.  When I add support for other SQL databases,
+though, I plan to use the same sort of approach and delay loading the
+necessary libraries until the appropriate constructor is called.  This
+saves us from loading several database libraries when we're only going
+to use one of them, or from requiring the user to load the libraries
+explicity.
+<<Load SQLite libraries>>=
+require(RSQLite)
+require(RSQLite.extfuns)
+@
+
+[[dbframe_unknown]] is kind of a crapshoot.  It stores the optional
+arguments in a list so that it can pass them to [[dbConnect]] as needed.
+<<Define [[dbframe_unknown]]>>=
+dbframe_unknown <- function(table,...,readonly = FALSE) {
+  return(new("dbframe_unknown", table = table, 
+             readonly = readonly, dbConnect.arguments = list(...)))
+}
+@ 
+
 }
 
 \examples{
-## add some examples 
+filename <- "/tmp/example.db"
+data(chickwts)
+example.sqlite <- dbframe("table7", dbname = filename, 
+                          dbdriver = "SQLite", data = chickwts)
+tail(example.sqlite)
+## an example where "table" is a select statement on its own
+example.sqlite2 <- 
+  dbframe("(select min(weight) as smallest from table7)",
+          dbname = filename, dbdriver = "SQLite")
+select(example.sqlite2)
+
+## clean up
+unlink(filename)
 }
 
 \keyword{database}
