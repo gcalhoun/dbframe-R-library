@@ -29,7 +29,7 @@
     records into a database from an R data frame.  \code{select} allows
     you to retrieve those records from the data base.  \code{select}
     also allows some basic data analysis, more or less anything that is
-    available in SQLite as an aggregate function.}
+    available as an aggregate function in the \acronym{SQL} database.}
 
   \subsection{Notes on implementation}{I'm attempting to make this
     package a literate program (Knuth, 1984).  That means that the
@@ -38,6 +38,14 @@
     discusses the source code for its functions.  Right now, the
     formatting is pretty rudimentary, but I hope to improve the
     appearance soon.}
+
+  This package is currently in alpha.  I use it in my research and will
+  add functionality as I need it, but I don't have the time to extend it
+  in some obviously important directions that are unrelated to my
+  workflow (some quick examples: support for databases other than SQLite
+  and implementation of joins and update queries).  I plan to do so in
+  the future, though, and even now would like to implement specific
+  requests if people are interested.
 }
 
 \references{
@@ -46,11 +54,12 @@ Knuth, Donald E., Literate Programming. \emph{The Computer Journal},
 }
 
 \examples{
-\dontrun{
-example.dbframe <- dbframe("table1", "/tmp/example.db")
+filename <- "/tmp/example.db"
+example.dbframe <- dbframe("table1", dbname = filename, clear = TRUE)
 data(chickwts)
 insert(example.dbframe) <- chickwts
-select(example.dbframe, "avg(weight)", group.by = "feed")}
+select(example.dbframe, "avg(weight)", group.by = "feed")
+unlink(filename)
 }
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \keyword{package}

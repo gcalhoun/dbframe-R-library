@@ -1,54 +1,98 @@
 % -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 \name{head}
+\alias{nrec}
 \alias{head.dbframe}
 \alias{tail.dbframe}
 \title{Retrieve head or tail of a table}
-\description{basically works like head or tail for a dbframe.}
+\description{Retrieves the first or last few records from a
+  [[dbframe]].  This function mimics the corresponding data frame methods.}
 \usage{
-head(x, n = 6L, \dots)
+\method{head}{dbframe}(x, n = 6L, \dots)
 
-tail(x, n = 6L, \dots)
+\method{tail}{dbframe}(x, n = 6L, \dots)
 }
 \arguments{
   \item{x}{A \code{dbframe} object}
-  \item{n}{The number of records to retrieve.}
-  \item{\dots}{Other arguments to pass to \code{select}}
+  \item{n}{An integer.  If positive, the number of records to
+      retrieve.  If negative, these functions will retrieve all but
+      [[n]] records.}
+  \item{\dots}{Other arguments to pass to [[select]]}
 }
 
-\details{Fill in}
 \value{Returns a data frame with the records.}
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
+\seealso{\code{\link{head}}, \code{\link{tail}}, \code{\link{select}}}
+
 \section{Implementation}{
-I need to explain what I'm doing at some point:
-
+[[head]] and [[tail]] are really basic functions; the implementation
+is pretty straightforward.  The only complication is that the
+\dQuote{\ldots} arguments an be passed multiple times, so I pull them
+out and store them in a list.
 <<*>>=
-head.dbframe <- function(x, n = 6L, ...) {
+head.dbframe <- function(x, n = 6L,...) {
+  <<Process arguments>>
   if (n >= 0) {
-    select(x, limit = n,...)
+    <<Return the first |n| records>>
   } else {
-    nrec <- select(x, "count(*)")[[1]]
-    select(x, limit = nrec + n,...)
+    <<Return all but the last |n| records>>
+  }
+}
+
+tail.dbframe <- function(x, n = 6L,...) {
+  <<Process arguments>> 
+  nrecords <- do.call("nrow", c(x = x, arguments))
+  if (n >= 0) {
+    <<Return the last |n| records>>
+  } else {
+    <<Return all but the first |n| records>>
   }
 }
 @
+We use select statements with \dQuote{limit} and \dQuote{offset} to get
+the records.
+<<Return the first |n| records>>=
+return(do.call("select", c(x = x, arguments)))
+@ 
 
-<<*>>=
-tail.dbframe <- function(x, n = 6L, ...) {
-  nrec <- select(x, "count(*)")[[1]]
-  if (n >= 0) {
-    select(x, limit = sprintf("%d,%d", nrec - n, n),...)
-  } else {
-    select(x, limit = sprintf("%d,%d", -n, nrec + n),...)
-  }
-}
+<<Return all but the last |n| records>>=
+nrecords <- do.call("nrow", c(x = x, arguments))
+return(do.call("select", 
+               c(x = x, limit = n + nrecords, arguments)))
 @
+
+<<Return the last |n| records>>=
+return(do.call("select", 
+  c(x = x, limit = sprintf("%d,%d", nrecords - n, n), arguments)))
+@ 
+
+<<Return all but the first |n| records>>=
+return(do.call("select",
+  c(x = x, limit = sprintf("%d,%d", -n, nrecords + n), arguments)))
+@ 
+
+The only complication in handling the arguments is that the
+\dQuote{\ldots} arguments an be passed multiple times, so I pull them
+out and store them in a list.  Also, for compatability with the other
+[[head]] and [[tail]] methods, we don't let the user specify a
+\dQuote{limit} argument, even though we use it in [[select]].
+<<Process arguments>>=
+arguments <- list(...)
+if (!is.null(arguments$limit)) {
+  warning("discarding 'limit' argument")
+  arguments$limit <- NULL
+}
+@ 
 }
 
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+data(chickwts)
+filename <- "/tmp/example.db"
+chicksdb <- dbframe("table19", dbdriver = "SQLite", dbname = filename,
+                    data = chickwts)
+head(chickwts)
+tail(chickwts, -60)
+tail(chickwts)
 }
 \keyword{database}
 

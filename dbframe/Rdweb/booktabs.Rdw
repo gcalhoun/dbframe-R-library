@@ -1,0 +1,111 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+\name{booktabs}
+\alias{booktabs}
+\title{Construct a nice table from a data frame}
+\description{Constructs an attractive Latex table (that uses booktabs)
+  from an arbitrary data frame.}
+\usage{
+booktabs(dframe, align = rep("l", ncol(dframe)), 
+         digits = rep(1, ncol(dframe)), 
+         numberformat = rep(FALSE, ncol(dframe)),
+         tabular.environment = "tabularx", include.rownames = FALSE,
+         sanitize.text.function = function(x) x, drop = NULL,...)
+}
+
+\arguments{
+  \item{dframe}{A data frame or an object that can be coerced to a data.frame.}
+  \item{align}{Alignment.}
+  \item{digits}{Number of digits for each column.}
+  \item{numberformat}{logical vector indicating which columns should be
+    formatted as numbers.  This adds padding to the left side of the
+    numbers so that the column aligns on the decimal point, switches to
+    math mode to turn off old-style numbering (if needed), and converts
+    hyphens into minus signs..}
+  \item{tabular.environment}{Defaults to using tabularx in Latex.}
+  \item{include.rownames}{Logical; should the data frame's rownames be
+    included (probably not)}
+  \item{sanitize.text.function}{Disables escaping out backslashes, etc.}
+  \item{drop}{A character vector indicating some columns to omit.  This
+    can be useful if those columns are used for sorting or to create
+    derived columns.}
+  \item{\dots}{Additional arguments to pass to \code{xtable}.}
+}
+\details{This function uses \code{xtable} to generate the Latex, then
+  modifies the table.  The containing Latex document should use the
+  "booktabs" package.}
+\value{Latex code for a table.}
+
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+\seealso{\code{\link{xtable}}}
+
+\section{Implementation}{
+In my research, I usually collect simulation results in the table of
+some database.  Summarizing the results then amounts to running a
+query to aggregate that data, and then plot or tabulate that query's
+results.  .  The implementation is straightforward.
+<<*>>=
+booktabs <- function(dframe, align = rep("l", ncol(dframe)),
+                     digits = rep(1, ncol(dframe)), 
+                     numberformat = rep(FALSE, ncol(dframe)),
+                     tabular.environment = "tabularx", 
+                     include.rownames = FALSE,
+                     sanitize.text.function = function(x) x, 
+                     drop = NULL,...) {
+  <<Format the [[dframe]] object>>
+  return(<<Assemble Latex code for table>>)
+}
+@
+
+<<Assemble Latex code for table>>=
+gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
+     sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
+     print(xtable(dframe, align = align, digits = digits,...),
+           file = "/dev/null", floating = FALSE,
+           add.to.row = list(pos=list(-1, 0, nrow(dframe)),
+             command = c("\\toprule", "\\midrule", "\\bottomrule")),
+           tabular.environment = tabular.environment,
+           sanitize.text.function = sanitize.text.function,
+           include.rownames = include.rownames))
+@
+
+A little bit of routine reformatting needs to happen for convenience.
+<<Format the [[dframe]] object>>=
+dframe <- as.data.frame(dframe)
+<<Drop user-specified columns>>
+<<Pad formatting columns to accomodate xtable's handling of rownames>>
+<<Reformat numeric columns>>
+@
+
+<<Drop user-specified columns>>=
+if (!is.null(drop)) 
+  dframe <- dframe[, setdiff(names(dframe), drop), drop = FALSE]
+@ 
+
+The way [[xtable]] handles the row names is kind of annoying: alignment
+and digits need to specified for it, even if the row names will not be
+shown.  To avoid doing that, we pad the necessary arguments if the row
+names aren't going to be shown.
+<<Pad formatting columns to accomodate xtable's handling of rownames>>=
+if (!include.rownames) {
+  align <- c("l", align)
+  digits <- c(0, digits)
+  numberformat <- c(FALSE, numberformat)
+}
+@
+
+Columns that contain numbers are reformatted as described above.
+<<Reformat numeric columns>>=
+numindex <- numberformat[-1]
+dframe[,numindex] <- lapply(which(numindex), function (i)
+  gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
+       format(round(dframe[,i], digits[i]))))))
+@ 
+}
+
+\examples{
+data(chickwts)
+cat(booktabs(head(chickwts)))
+}
+
+\keyword{methods}
+\keyword{printing}

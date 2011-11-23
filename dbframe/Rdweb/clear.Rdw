@@ -3,43 +3,67 @@
 \alias{clear}
 \alias{clear-methods}
 \title{Remove a table from the database}
-\description{Deletes a table referenced by by a \code{dbframe} object.}
+\description{The function [[clear]] removes the tables associated with
+a collection of [[dbframe]] objects from their data bases.}
 \usage{clear(...)}
-\arguments{\item{\dots}{Each argument should be a dbframe object.}}
+\arguments{\item{\dots}{Each argument listed should be a dbframe object.}}
 
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
+\details{The table is removed and not just emptied, so the column
+  names and types are discarded as well.}
+
 \section{Implementation}{
+The first step is to define a generic [[clear]] function.  The actual
+function is a method for the [[dbframe]] class.  Methods for other
+classes could be defined as well.
 <<*>>=
 setGeneric("clear", function(...)
            standardGeneric("clear"), signature = "...")
 setMethod("clear", signature = "dbframe", function(...) {
   x <- list(...)
   <<Check that all arguments have the correct type>>
-  sapply(x, function(y) <<Remove table referenced by "y" from database>>)
-})
-@  
-
+  sapply(x, function(y) {
+    <<Remove table referenced by "y" from database>>})})
+@  %
+Removing the table is pretty easy since we can just use methods
+defined by DBI.
 <<Remove table referenced by "y" from database>>=
-{ dbc <- dbConnect(y)
-  res <- if (sql(y) %in% dbListTables(dbc)) {
-    dbRemoveTable(dbc, sql(y),...)
-  } else {
-    FALSE
-  }
-  dbDisconnect(dbc) }
+dbc <- dbConnect(y)
+res <- if (table(y) %in% dbListTables(dbc)) {
+  stopifnot(!readonly(y))
+  dbRemoveTable(dbc, table(y),...)
+} else {
+  FALSE
+}
+dbDisconnect(dbc)
 @
 
+More sophisticated input checking might be desirable, but right now I
+just check whether all of the arguments are [[dbfame]]s.
 <<Check that all arguments have the correct type>>=
 if (!all(sapply(x, function(y) is(y, "dbframe")))) 
   stop("All arguments must be dbframes")
 @ 
 }
 
+\seealso{dbRemoveTable}
+
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+filename <- "/tmp/example.db"
+example.dbframe <- dbframe("table2", dbname = filename)
+example2.dbframe <- dbframe("table3", dbname = filename)
+clear(example.dbframe, example2.dbframe)
+
+data(chickwts)
+insert(example.dbframe) <- chickwts
+head(example.dbframe)
+clear(example.dbframe)
+\dontrun{
+head(example.dbframe)
+}
+
+unlink(filename)
 }
 \keyword{database}
 \keyword{methods}
