@@ -17,14 +17,14 @@ rows(x)
 
 \section{Implementation}{
 <<*>>=
-rows <- function(x) {
-  x <- as.data.frame(x)
-  if (nrow(x) > 0) {
-    lapply(seq.int(nrow(x)), function(i) x[i,])
-  } else {
-    list()
-  }
-}
+    rows <- function(x) {
+      x <- as.data.frame(x)
+      if (nrow(x) > 0) {
+        lapply(seq.int(nrow(x)), function(i) x[i,])
+      } else {
+        list()
+      }
+    }
 @  
 }
 

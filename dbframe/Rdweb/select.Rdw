@@ -49,38 +49,38 @@ The inidividual methods do some minor parsing, but most of the work is
 done by [[generate.select.sql]].
   
 <<*>>=
-generate.select.sql <- function(table, cols = "*", where = NULL, 
-  group.by = NULL, having = NULL, order.by = NULL, limit = NULL, ...) {
+    generate.select.sql <- function(table, cols = "*", where = NULL, 
+      group.by = NULL, having = NULL, order.by = NULL, limit = NULL, ...) {
 
-  <<Format the "select" part of the statement>>
-  <<Format the "group by" part of the statement>>
-  <<Format the "order by" part of the statement>>
-  <<Format the "having" part of the statement>>
-  <<Format the "where" part of the statement>>
-  <<Format the "limit" part of the statement>>
-  return(paste("select", cols, "from", table, where, 
-               group.by, having, order.by, limit))
-}
+      <<Format the "select" part of the statement>>
+      <<Format the "group by" part of the statement>>
+      <<Format the "order by" part of the statement>>
+      <<Format the "having" part of the statement>>
+      <<Format the "where" part of the statement>>
+      <<Format the "limit" part of the statement>>
+      return(paste("select", cols, "from", table, where, 
+                   group.by, having, order.by, limit))
+    }
 
-setGeneric("select", function(x, cols, ...) standardGeneric("select"))
-setMethod("select", signature = c("dbframe", "missing"), 
-          function(x, cols,...) {
-            <<Execute select for c("dbframe", "missing")>>})
-setMethod("select", signature = c("dbframe", "character"), 
-          function(x, cols,...) {
-            <<Execute select for c("dbframe", "character")>>})
+    setGeneric("select", function(x, cols, ...) standardGeneric("select"))
+    setMethod("select", signature = c("dbframe", "missing"), 
+              function(x, cols,...) {
+                <<Execute select for c("dbframe", "missing")>>})
+    setMethod("select", signature = c("dbframe", "character"), 
+              function(x, cols,...) {
+                <<Execute select for c("dbframe", "character")>>})
 @
 
 \subsection{Assembling the SQL select statement}{
 To write the "select" part, we add the [[group.by]] variables and the
 [[cols]] variables together (and store them in [[cols]]).
 <<Format the "select" part of the statement>>=
-<<Nullify cols variable if it is undefined>>
-cols <- if (is.null(group.by)) {
-  paste(cols, collapse = ", ")
-} else {
-  <<Paste new group.by variables in front of cols variables>>
-}
+    <<Nullify cols variable if it is undefined>>
+    cols <- if (is.null(group.by)) {
+      paste(cols, collapse = ", ")
+    } else {
+      <<Paste new group.by variables in front of cols variables>>
+    }
 @ 
 To save typing, I assume that we want to retrieve the grouping variables
 and so we don't have to specify them explicitly in the [[cols]] vector.
@@ -92,16 +92,16 @@ vector; in some cases [[cols]] might contain a renamed or transformed
 [[group.by]] variable.  The code tries to be a little smart about those
 things, but could probably be improved.
 <<Paste new group.by variables in front of cols variables>>=
-paste(collapse = ", ", 
-      c(group.by[!sapply(group.by, function(g)
-                         g %in% substr(cols, 1, nchar(g)))], cols))
+    paste(collapse = ", ", 
+          c(group.by[!sapply(group.by, function(g)
+                             g %in% substr(cols, 1, nchar(g)))], cols))
 @ 
 Setting [[cols]] to [[NULL]] if it doesn't contain a "real" character
 string ensures that paste does the right thing.  We might want do set
 [[cols]] to "" if we only wanted to return variables specified in
 [[group.by]].
 <<Nullify cols variable if it is undefined>>=
-if ((length(cols) == 1) && (nchar(cols) == 0)) cols <- NULL
+    if ((length(cols) == 1) && (nchar(cols) == 0)) cols <- NULL
 @ 
 
 Managing the other arguments is easy.  If they're [[NULL]] we replace
@@ -109,67 +109,67 @@ the variable with an empty string; if they're not, we add the
 appropriate label and replace the variable with a character object that
 contains a clause for the SQL statement.
 <<Format the "group by" part of the statement>>=
-group.by <- 
-  if (is.null(group.by)) {
-    "" 
-  } else {
-    paste("group by", paste(group.by, collapse = ", "))
-  }
+    group.by <- 
+      if (is.null(group.by)) {
+        "" 
+      } else {
+        paste("group by", paste(group.by, collapse = ", "))
+      }
 @ 
 
 <<Format the "order by" part of the statement>>=
-order.by <- 
-  if (is.null(order.by)) {
-    ""
-  } else {
-    paste("order by", paste(order.by, collapse = ", "))
-  }
+    order.by <- 
+      if (is.null(order.by)) {
+        ""
+      } else {
+        paste("order by", paste(order.by, collapse = ", "))
+      }
 @ 
 
 <<Format the "having" part of the statement>>=
-having <-
-  if (is.null(having)) {
-    ""
- } else {
-   paste("having", having)
- }
+    having <-
+      if (is.null(having)) {
+        ""
+      } else {
+        paste("having", having)
+      }
 @ 
 
 <<Format the "where" part of the statement>>=
-where <-
-  if (is.null(where)) {
-    "" 
-  } else {
-    paste("where", where)
-  }
+    where <-
+      if (is.null(where)) {
+        "" 
+      } else {
+        paste("where", where)
+      }
 @ 
 
 <<Format the "limit" part of the statement>>=
-limit <- 
-  if (is.null(limit)) {
-    "" 
-  } else {
-    paste("limit", limit)
-  }
+    limit <- 
+      if (is.null(limit)) {
+        "" 
+      } else {
+        paste("limit", limit)
+      }
 @ 
 }
 \subsection{Details of argument handling}{
   The individual methods just call [[generate.select.sql]] and execute
   the select statement.  
 <<Execute select for c("dbframe", "character")>>=
-dbc <- dbConnect(x)
-d <- dbGetQuery(dbc, generate.select.sql(table(x), cols, ...))
-dbDisconnect(dbc)
-return(d)
+    dbc <- dbConnect(x)
+    d <- dbGetQuery(dbc, generate.select.sql(table(x), cols, ...))
+    dbDisconnect(dbc)
+    return(d)
 @
 
 If [[cols]] is "missing" it returns results for
 [[cols]] equal to "*" (i.e. all of the columns of the table).
 <<Execute select for c("dbframe", "missing")>>=
-dbc <- dbConnect(x)
-d <- dbGetQuery(dbc, generate.select.sql(table(x),...))
-dbDisconnect(dbc)
-return(d)
+    dbc <- dbConnect(x)
+    d <- dbGetQuery(dbc, generate.select.sql(table(x),...))
+    dbDisconnect(dbc)
+    return(d)
 @ 
 }}
 

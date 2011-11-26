@@ -34,14 +34,14 @@ presumably it could be extended to other classes.  So, the main steps
 in the defining the function are to define a generic and then set the
 specific method for the dbframe class.
 <<*>>=
-setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
+    setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
 
-setMethod("insert<-", signature = "dbframe", function(x,...,value) {
-  stopifnot(!readonly(x))
-  <<Connect to database and determine whether the table exists>>
-  <<Write to database and disconnect>>
-  return(x)
-})
+    setMethod("insert<-", signature = "dbframe", function(x,...,value) {
+      stopifnot(!readonly(x))
+      <<Connect to database and determine whether the table exists>>
+      <<Write to database and disconnect>>
+      return(x)
+    })
 @
 
 We can use the [[dbExistsTable]] method (from DBI) to determine
@@ -50,13 +50,13 @@ find out which columns in [[value]] already exists, because we will
 only insert those columns into the database.  If the table does not
 exist, we insert all of the columns of [[value]].
 <<Connect to database and determine whether the table exists>>=
-dbc <- dbConnect(x)
-cols <- if (dbExistsTable(dbc, table(x))) {
-  colnames <- names(select(x, limit = 0))
-  colnames[colnames %in% names(value)]
-} else {
-  names(value)
-}
+    dbc <- dbConnect(x)
+    cols <- if (dbExistsTable(dbc, table(x))) {
+      colnames <- names(select(x, limit = 0))
+      colnames[colnames %in% names(value)]
+    } else {
+      names(value)
+    }
 @
 
 Writing to the database is straightforward---we just use the
@@ -65,9 +65,9 @@ frame [[value]] are rearranged to agree with the table in the
 database automatically by indexing [[value]] with the vector
 [[cols]] determined above.
 <<Write to database and disconnect>>=
-dbWriteTable(dbc, table(x), value[, cols, drop=FALSE],
-             row.names = FALSE, overwrite = FALSE, append = TRUE,...)
-dbDisconnect(dbc)
+    dbWriteTable(dbc, table(x), value[, cols, drop=FALSE],
+                 row.names = FALSE, overwrite = FALSE, append = TRUE,...)
+    dbDisconnect(dbc)
 @
 }
 

@@ -56,36 +56,36 @@ connection to the database (I have no idea if this will work well or
 not; if you use it, please be careful and give me feedback on how well
 it goes).
 <<*>>=
-dbframe <- function(table, dbdriver = "SQLite", data = NULL,
-                    readonly = FALSE, clear = FALSE,...) {
-  x <- switch(dbdriver, 
-              "SQLite" = dbframe_sqlite(table, readonly,...),
-              dbframe_unknown(table, readonly,...))
-  <<Clear old table if appropriate>>
-  <<Insert new data into table>>
-  return(x)
-}
+    dbframe <- function(table, dbdriver = "SQLite", data = NULL,
+                        readonly = FALSE, clear = FALSE,...) {
+      x <- switch(dbdriver, 
+                  "SQLite" = dbframe_sqlite(table, readonly,...),
+                  dbframe_unknown(table, readonly,...))
+      <<Clear old table if appropriate>>
+      <<Insert new data into table>>
+      return(x)
+    }
 
-<<Define [[dbframe_sqlite]]>>
-<<Define [[dbframe_unknown]]>>
+    <<Define ``dbframe_sqlite''>>
+    <<Define ``dbframe_unknown''>>
 @ 
 
 
 <<Clear old table if appropriate>>=
-if (clear) clear.result <- clear(x)
+    if (clear) clear.result <- clear(x)
 @
 <<Insert new data into table>>=
-if (!is.null(data)) insert(x) <- as.data.frame(data)
+    if (!is.null(data)) insert(x) <- as.data.frame(data)
 @
 
 [[dbframe_sqlite]] makes sure that the right [[RSQLite]] libraries are
 loaded and creates a new [[dbframe_sqlite]] object.
-<<Define [[dbframe_sqlite]]>>=
-dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
-  <<Load SQLite libraries>>
-  return(new("dbframe_sqlite", table = table,
-             readonly = readonly, dbname = dbname))
-}
+<<Define ``dbframe_sqlite''>>=
+    dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
+      <<Load SQLite libraries>>
+      return(new("dbframe_sqlite", table = table,
+                 readonly = readonly, dbname = dbname))
+    }
 @
 
 The [[dbframe]] package only suggests the [[RSQLite]] and
@@ -101,17 +101,17 @@ saves us from loading several database libraries when we're only going
 to use one of them, or from requiring the user to load the libraries
 explicity.
 <<Load SQLite libraries>>=
-require(RSQLite)
-require(RSQLite.extfuns)
+    require(RSQLite)
+    require(RSQLite.extfuns)
 @
 
 [[dbframe_unknown]] is kind of a crapshoot.  It stores the optional
 arguments in a list so that it can pass them to [[dbConnect]] as needed.
-<<Define [[dbframe_unknown]]>>=
-dbframe_unknown <- function(table,...,readonly = FALSE) {
-  return(new("dbframe_unknown", table = table, 
-             readonly = readonly, dbConnect.arguments = list(...)))
-}
+<<Define ``dbframe_unknown''>>=
+    dbframe_unknown <- function(table,...,readonly = FALSE) {
+      return(new("dbframe_unknown", table = table, 
+                 readonly = readonly, dbConnect.arguments = list(...)))
+    }
 @ 
 
 }

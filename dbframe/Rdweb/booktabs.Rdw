@@ -44,61 +44,61 @@ some database.  Summarizing the results then amounts to running a
 query to aggregate that data, and then plot or tabulate that query's
 results.  .  The implementation is straightforward.
 <<*>>=
-booktabs <- function(dframe, align = rep("l", ncol(dframe)),
-                     digits = rep(1, ncol(dframe)), 
-                     numberformat = rep(FALSE, ncol(dframe)),
-                     tabular.environment = "tabularx", 
-                     include.rownames = FALSE,
-                     sanitize.text.function = function(x) x, 
-                     drop = NULL,...) {
-  <<Format the [[dframe]] object>>
-  return(<<Assemble Latex code for table>>)
+    booktabs <- function(dframe, align = rep("l", ncol(dframe)),
+                         digits = rep(1, ncol(dframe)), 
+                         numberformat = rep(FALSE, ncol(dframe)),
+                         tabular.environment = "tabularx", 
+                         include.rownames = FALSE,
+                         sanitize.text.function = function(x) x, 
+                         drop = NULL,...) {
+      <<Format the dframe object>>
+      return(<<Assemble Latex code for table>>)
 }
 @
 
 <<Assemble Latex code for table>>=
-gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
-     sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
-     print(xtable(dframe, align = align, digits = digits,...),
-           file = "/dev/null", floating = FALSE,
-           add.to.row = list(pos=list(-1, 0, nrow(dframe)),
-             command = c("\\toprule", "\\midrule", "\\bottomrule")),
-           tabular.environment = tabular.environment,
-           sanitize.text.function = sanitize.text.function,
-           include.rownames = include.rownames))
+    gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
+         sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
+         print(xtable(dframe, align = align, digits = digits,...),
+               file = "/dev/null", floating = FALSE,
+               add.to.row = list(pos=list(-1, 0, nrow(dframe)),
+                 command = c("\\toprule", "\\midrule", "\\bottomrule")),
+               tabular.environment = tabular.environment,
+               sanitize.text.function = sanitize.text.function,
+               include.rownames = include.rownames))
 @
 
 A little bit of routine reformatting needs to happen for convenience.
-<<Format the [[dframe]] object>>=
-dframe <- as.data.frame(dframe)
-<<Drop user-specified columns>>
-<<Pad formatting columns to accomodate xtable's handling of rownames>>
-<<Reformat numeric columns>>
+<<Format the dframe object>>=
+    dframe <- as.data.frame(dframe)
+    <<Drop user-specified columns>>
+    <<Pad formatting columns to accomodate xtables handling of rownames>>
+    <<Reformat numeric columns>>
 @
 
 <<Drop user-specified columns>>=
-if (!is.null(drop)) 
-  dframe <- dframe[, setdiff(names(dframe), drop), drop = FALSE]
+    if (!is.null(drop)) 
+      dframe <- dframe[, setdiff(names(dframe), drop), drop = FALSE]
 @ 
 
 The way [[xtable]] handles the row names is kind of annoying: alignment
 and digits need to specified for it, even if the row names will not be
 shown.  To avoid doing that, we pad the necessary arguments if the row
 names aren't going to be shown.
-<<Pad formatting columns to accomodate xtable's handling of rownames>>=
-if (!include.rownames) {
-  align <- c("l", align)
-  digits <- c(0, digits)
-  numberformat <- c(FALSE, numberformat)
-}
+<<Pad formatting columns to accomodate xtables handling of rownames>>=
+    if (!include.rownames) {
+      align <- c("l", align)
+      digits <- c(0, digits)
+      numberformat <- c(FALSE, numberformat)
+    }
 @
 
 Columns that contain numbers are reformatted as described above.
 <<Reformat numeric columns>>=
-numindex <- numberformat[-1]
-dframe[,numindex] <- lapply(which(numindex), function (i)
-  gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
-       format(round(dframe[,i], digits[i]))))))
+    numindex <- numberformat[-1]
+    dframe[,numindex] <- lapply(which(numindex), function (i)
+      gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
+           format(round(dframe[,i], digits[i]))))))
 @ 
 }
 
