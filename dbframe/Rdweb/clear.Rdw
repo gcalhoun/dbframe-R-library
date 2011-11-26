@@ -18,32 +18,32 @@ The first step is to define a generic [[clear]] function.  The actual
 function is a method for the [[dbframe]] class.  Methods for other
 classes could be defined as well.
 <<*>>=
-setGeneric("clear", function(...)
-           standardGeneric("clear"), signature = "...")
-setMethod("clear", signature = "dbframe", function(...) {
-  x <- list(...)
-  <<Check that all arguments have the correct type>>
-  sapply(x, function(y) {
-    <<Remove table referenced by "y" from database>>})})
+    setGeneric("clear", function(...)
+               standardGeneric("clear"), signature = "...")
+    setMethod("clear", signature = "dbframe", function(...) {
+      x <- list(...)
+      <<Check that all arguments have the correct type>>
+      sapply(x, function(y) {
+      <<Remove table referenced by "y" from database>>})})
 @  %
 Removing the table is pretty easy since we can just use methods
 defined by DBI.
 <<Remove table referenced by "y" from database>>=
-dbc <- dbConnect(y)
-res <- if (table(y) %in% dbListTables(dbc)) {
-  stopifnot(!readonly(y))
-  dbRemoveTable(dbc, table(y),...)
-} else {
-  FALSE
-}
-dbDisconnect(dbc)
+    dbc <- dbConnect(y)
+    res <- if (table(y) %in% dbListTables(dbc)) {
+      stopifnot(!readonly(y))
+      dbRemoveTable(dbc, table(y),...)
+    } else {
+      FALSE
+    }
+    dbDisconnect(dbc)
 @
 
 More sophisticated input checking might be desirable, but right now I
 just check whether all of the arguments are [[dbfame]]s.
 <<Check that all arguments have the correct type>>=
-if (!all(sapply(x, function(y) is(y, "dbframe")))) 
-  stop("All arguments must be dbframes")
+    if (!all(sapply(x, function(y) is(y, "dbframe")))) 
+      stop("All arguments must be dbframes")
 @ 
 }
 
