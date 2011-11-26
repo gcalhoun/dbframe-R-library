@@ -62,10 +62,10 @@ results.  .  The implementation is straightforward.
          print(xtable(dframe, align = align, digits = digits,...),
                file = "/dev/null", floating = FALSE,
                add.to.row = list(pos=list(-1, 0, nrow(dframe)),
-                 command = c("\\toprule", "\\midrule", "\\bottomrule")),
+                 command = c("\\toprule ", "\\midrule ", "\\bottomrule ")),
                tabular.environment = tabular.environment,
                sanitize.text.function = sanitize.text.function,
-               include.rownames = include.rownames))
+               include.rownames = include.rownames, hline.after = NULL))
 @
 
 A little bit of routine reformatting needs to happen for convenience.
