@@ -5,10 +5,9 @@
 \description{Constructs an attractive Latex table (that uses booktabs)
   from an arbitrary data frame.}
 \usage{
-booktabs(dframe, align = rep("l", ncol(dframe)), 
-         digits = rep(1, ncol(dframe)), 
-         numberformat = rep(FALSE, ncol(dframe)),
-         tabular.environment = "tabularx", include.rownames = FALSE,
+booktabs(dframe, align = "l", digits = 1, numberformat = FALSE,
+         purgeduplicates = TRUE, tabular.environment = "tabularx",
+         include.rownames = FALSE,
          sanitize.text.function = function(x) x, drop = NULL,...)
 }
 
@@ -44,14 +43,13 @@ some database.  Summarizing the results then amounts to running a
 query to aggregate that data, and then plot or tabulate that query's
 results.  .  The implementation is straightforward.
 <<*>>=
-    booktabs <- function(dframe, align = rep("l", ncol(dframe)),
-                         digits = rep(1, ncol(dframe)), 
-                         numberformat = rep(FALSE, ncol(dframe)),
+    booktabs <- function(dframe, align = "l", digits = 1,
+                         numberformat = FALSE, purgeduplicates = TRUE,
                          tabular.environment = "tabularx", 
                          include.rownames = FALSE,
                          sanitize.text.function = function(x) x, 
                          drop = NULL,...) {
-      <<Format the dframe object>>
+      <<Format arguments>>
       return(<<Assemble Latex code for table>>)
 }
 @
@@ -69,11 +67,23 @@ results.  .  The implementation is straightforward.
 @
 
 A little bit of routine reformatting needs to happen for convenience.
-<<Format the dframe object>>=
+
+<<Format arguments>>=
     dframe <- as.data.frame(dframe)
     <<Drop user-specified columns>>
+    <<Correct dimensions of arguments>>
     <<Pad formatting columns to accomodate xtables handling of rownames>>
     <<Reformat numeric columns>>
+    <<Remove duplicates from specified columns>>
+@
+
+<<Correct dimensions of arguments>>=
+    ncol <- ncol(dframe) + include.rownames
+    if (length(align) == 1) align <- rep(align, ncol)
+    if (length(digits) == 1) digits <- rep(digits, ncol)
+    if (length(numberformat) == 1) numberformat <- rep(numberformat, ncol)
+    if (length(purgeduplicates) == 1)
+      purgeduplicates <- rep(purgeduplicates, ncol)
 @
 
 <<Drop user-specified columns>>=
@@ -89,18 +99,27 @@ names aren't going to be shown.
     if (!include.rownames) {
       align <- c("l", align)
       digits <- c(0, digits)
-      numberformat <- c(FALSE, numberformat)
     }
 @
 
 Columns that contain numbers are reformatted as described above.
 <<Reformat numeric columns>>=
-    numindex <- numberformat[-1]
-    dframe[,numindex] <- lapply(which(numindex), function (i)
+    dframe[,numberformat] <- lapply(which(numberformat), function (i)
       gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
            format(round(dframe[,i], digits[i]))))))
 @ 
 }
+
+Finally, we remove duplicates in a slightly clever way
+<<Remove duplicates from specified columns>>=
+    repeats <- function(x) c(FALSE, x[-1] == x[seq_len(length(x) - 1)])
+    purgeindex <- which(purgeduplicates)
+    for (i in rev(seq_along(purgeindex))) {
+      dframe[repeats(dframe[[i]]) &
+             duplicated(dframe[, purgeindex[seq_len(i)], drop = FALSE]),
+             purgeindex[i]] <- NA
+    }
+@
 
 \examples{
 data(chickwts)
