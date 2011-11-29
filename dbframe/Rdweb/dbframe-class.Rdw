@@ -12,95 +12,116 @@
 \alias{!=,dbframe_sqlite,dbframe_sqlite-method}
 \alias{dbname,dbframe_sqlite-method}
 \alias{sql,dbframe_sqlite-method}
-\alias{dbframe_unknown-class}
-\alias{==,dbframe_unknown,dbframe-method}
-\alias{!=,dbframe_unknown,dbframe_unknown-method}
-\alias{dbname,dbframe_unknown-method}
-\alias{sql,dbframe_unknown-method}
 \alias{sql}
 \alias{dbname}
 
+\newcommand{\sql}{\acronym{sql}}
+\newcommand{\sqlite}{\acronym{sql}ite}
+
 \title{Class \code{"dbframe"}}
 \description{Each \dQuote{dbframe} object references a particular
-  table inside an SQL database.  The class and its methods are
+  table inside an \sql database.  The class and its methods are
   designed to query and manipulate the table easily inside R.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form
-\code{new("dbframe_sqlite", ...)}, but I recommend that you use the
+\code{new("dbframe", ...)}, but I recommend that you use the
 constructor [[dbframe]].
 
-The [[dbframe_sqlite]] class creates a link to a table in an SQLite
-database, and [[dbframe]] acts as a superclass.  I'd like to add other
-classes that store links to other databases (i.e. MySQL and
-PostgreSQL) as well.  Until then, [[dbframe_unknown]] is an
-experimental class that tries to guess how to open a connection to the
-right database---please let me know how well it works, or if it works at
-all.}
+The [[dbframe_sqlite]] class creates a link to a table in an \sqlite
+database, and [[dbframe]] acts as a superclass.
+[[dbframe_sqlite_temporary]] implements temporary \acronym{sql}ite
+databases.  I'd like to add other classes that store links to other
+databases (i.e. My\sql and Postgre\sql) as well.  Until then, [[dbframe]]
+also works as an experimental class that tries to guess how to open a
+connection to the right database---please let me know how well it works,
+or if it works at all.}
 
 \section{Slots}{
-  \describe{
-    \item{\code{dbname}:}{Object of class \code{"character"}, the filename
-      of the associated SQLite database.}
-    \item{\code{table}:}{Object of class \code{"character"}, the name
-      of the table associated with this [[dbframe]] object. }
-    \item{\code{readonly}:}{Object of class \code{"logical"} that
-      indicates whether the user is allowed to write to the database.
-      Be careful!  This is implemented only as a safeguard against
-      carelessness; it is still very easy to write to the table.}
-    \item{\code{dbConnect.arguments}:}{Object of class \code{"list"}, a
-      list of arguments to pass to [[dbConnect]] when it's time to
-      connect to the database.}
+  \subsection{\code{dbframe}}{
+    \describe{
+      \item{\code{dbConnect.arguments}:}{Object of class \code{"list"}, a
+	list of arguments to pass to [[dbConnect]] when it's time to
+	connect to the database.}
+      \item{\code{readonly}:}{Object of class \code{"logical"} that
+	indicates whether the user is allowed to write to the database.
+	Be careful!  This is implemented only as a safeguard against
+	carelessness; it is still very easy to write to the table.}
+      \item{\code{table}:}{Object of class \code{"character"}, the name
+	of the table associated with this [[dbframe]] object. }
+    }
+  }
+  \subsection{Additional slots for \code{dbframe_sqlite}}{
+    \describe{
+      \item{\code{dbname}:}{Object of class \code{"character"}, the filename
+	of the associated SQLite database.}
+    }
   }
 }
 \section{Methods}{
-  \describe{
-    \item{clear}{\code{signature(... = "dbframe")}: Remove the table
+  \subsection{\code{dbframe}}{
+    \describe{
+      \item{clear}{\code{signature(... = "dbframe")}: Remove the table
         corresponding to the [[dbframe]] object from its database.
-        Please see the [[clear]] documentation for implementation details.}
-    \item{dbname}{\code{signature(x = "dbframe_sqlite")}: Returns the
-        filename of the SQLite database associated with the object.
+        Please see the [[clear]] documentation for details.}
+      \item{dbname}{\code{signature(x = "dbframe_sqlite")}: Returns the
+        filename of the \sqlite database associated with the object.
 <<Define "dbname" method>>=
-setMethod("dbname", signature = c("dbframe_sqlite"), function(x) x@dbname)
-@
-}
-    \item{dbConnect}{\code{signature(drv = "dbframe_sqlite")}:
+    setMethod("dbname", signature = c("dbframe"), function(x) x@dbname)
+@ }
+      \item{dbConnect}{\code{signature(drv = "dbframe")}:
         Establishes a connection with the database associated with the
-      object.  The math extensions are enabled by default.
-<<Define "dbConnect" method>>=
-setMethod("dbConnect", signature = "dbframe_sqlite", 
-          definition = function(drv,...) {
-            dbc <- dbConnect("SQLite", dbname = dbname(drv))
-            init_extensions(dbc)
-            return(dbc)})
-@
-}
-    \item{dbConnect}{\code{signature(drv = "dbframe_unknown")}:
-        Establishes a connection with the database associated with the
-      object.
-<<Define "dbConnect" method>>=
-    setMethod("dbConnect", signature = "dbframe_unknown", 
+	object.
+<<Define "dbConnect" method for "dbframe">>=
+    setMethod("dbConnect", signature = "dbframe", 
               definition = function(drv,...)
-              do.call("dbConnect", dbConnect.arguments))
-@
-}
-    \item{insert<-}{\code{signature(x = "dbframe")}: Insert records
+              do.call("dbConnect", drv@dbConnect.arguments))
+@ }
+      \item{insert<-}{\code{signature(x = "dbframe")}: Insert records
         into the [[dbframe]] table.  Please see individual
-        documentation for implementation details.}
-    \item{readonly}{\code{signature(x = "dbframe")}: Determine whether
+        documentation for details.}
+      \item{readonly}{\code{signature(x = "dbframe")}: Determine whether
         the dbframe object is read-only.
 <<Define "readonly" method>>=
     setMethod("readonly", signature = c("dbframe"), function(x) x@readonly)
+@ }
+      \item{select}{Query the [[dbframe]] table.  Please see individual
+        documentation for details.}   
+      \item{tablename}{\code{signature(x = "dbframe")}: Returns the table
+        name associated with the object.
+<<Define "tablename" method>>=
+    setMethod("tablename", signature = c("dbframe"), function(x) x@table)
+@
+      }
+      \item{is.linked}{\code{signature(x = "dbframe")}: Check whether
+	the table associated with the [[dbframe]] exists.
+<<Define "is.linked" method>>=
+    setMethod("is.linked", signature = c("dbframe"), function(x,...) {
+      dbc <- dbConnect(x,...)
+      answer <- tablename(x) %in% dbListTables(dbc)
+      dbDisconnect(dbc)
+      return(answer)
+    })
 @ 
       }
-    \item{select}{Query the [[dbframe]] table.  Please see individual
-        documentation for implementation details.}   
-    \item{table}{\code{signature(x = "dbframe")}: Returns the table
-        name associated with the object.
-<<Define "table" method>>=
-    setMethod("table", signature = c("dbframe"), function(x) x@table)
+    }
+  }
+
+  \subsection{For \code{dbframe_sqlite}}{
+    \describe{
+      \item{dbConnect}{\code{signature(drv = "dbframe_sqlite")}:
+        Establishes a connection with the database associated with the
+	object.
+<<Define "dbConnect" method for "dbframe_sqlite">>=
+    setMethod("dbConnect", signature = "dbframe_sqlite", 
+              definition = function(drv,...)
+                return(do.call("dbConnect",
+                               c(drv = "SQLite", dbname = dbname(drv), list(...),
+                                 dbConnect.arguments = drv@dbConnect.arguments))))
 @
+      }
+    }
+  }
 }
-}}
 \section{S3 Methods}{
   \describe{
     \item{as.data.frame}{\code{as.data.frame.dbframe}: Coerce a
@@ -109,13 +130,13 @@ setMethod("dbConnect", signature = "dbframe_sqlite",
     as.data.frame.dbframe <- function(x,...) select(x,...)
 @ 
 }
-    \item{nrow}{\code{nrow.dbframe}: Determine the number of
-      rows/records in a dbframe.
-<<Define "nrow" method>>=
-    nrow.dbframe <- function(x,...) {
-      arguments <- list(...)
-      arguments[["cols"]] <- "count(*)"
-      sum(do.call(select(x, c(x = x, arguments)))[[1]])
+    \item{dim}{\code{dim.dbframe}: Determine the number of
+      rows and columns in a dbframe.
+<<Define "dim" method>>=
+    dim.dbframe <- function(x) {
+      nrows <- select(x, "count(*)")[[1]]
+      ncols <- length(select(x, limit = 0))
+      c(nrows, ncols)
     }
 @ 
 }}}
@@ -123,32 +144,36 @@ setMethod("dbConnect", signature = "dbframe_sqlite",
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
 \section{Implementation}{
-The basic definition of these classes is straightforward:
+  The basic definition of these classes is straightforward.
+  Individual methods are defined above; I'll define the generic
+  functions here as necessary; note that the generic function for
+  [[dbConnect]] is defined in the DBI package.
 <<*>>=
     setClass("dbframe", representation(table = "character",
-                                       readonly = "logical"))
+                                       readonly = "logical",
+                                       dbConnect.arguments = "list"))
+
     setClass("dbframe_sqlite", contains = "dbframe",
              representation(dbname = "character"))
-    setClass("dbframe_unknown", contains = "dbframe",
-             representation(dbConnect.arguments = "list"))
-@ %
-Individual methods are defined above; I'll define the generic
-functions here as necessary; note that the generic function for
-[[dbConnect]] is defined in the DBI package.
-<<*>>=
-    <<Define "dbConnect" method>>
+
+    <<Define "dbConnect" method for "dbframe">>
+    <<Define "dbConnect" method for "dbframe_sqlite">>
+ 
     <<Define "as.data.frame" method>>
-    <<Define "nrow" method>>
-    setGeneric("table", function(x) standardGeneric("table"))
-    <<Define "table" method>>
+    <<Define "dim" method>>
+  
+    setGeneric("tablename", function(x) standardGeneric("tablename"))
+    <<Define "tablename" method>>
     setGeneric("dbname", function(x) standardGeneric("dbname"))
     <<Define "dbname" method>>
     setGeneric("readonly", function(x) standardGeneric("readonly"))
     <<Define "readonly" method>>
+    setGeneric("is.linked", function(x,...) standardGeneric("is.linked"))
+    <<Define "is.linked" method>>
 @
 }
 
-\seealso{\code{\link{dbframe_sqlite}}, \code{\link{clear}},
+\seealso{\code{\link{dbframe}}, \code{\link{clear}},
   \code{\link{insert<-}}, \code{\link{select}}}
 
 \keyword{classes}
