@@ -3,6 +3,7 @@
 \alias{dbframe}
 \alias{dbframe_sqlite}
 \alias{dbframe_sqlite_temporary}
+\alias{dbframe_unknown}
 \title{Create a \code{dbframe} object}
 \description{This is a constructor for the dbframe class.  I've only
   made a constructor for SQLite databases, but will (probably) add

@@ -52,5 +52,4 @@ $(package)/DESCRIPTION: DESCRIPTION
 
 check: $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION ## $(package)/NAMESPACE
 	$(RR) CMD check $(package)
-	$(RD) CMD check $(package)
 	touch $@

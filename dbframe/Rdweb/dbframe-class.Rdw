@@ -13,6 +13,12 @@
 \alias{dbname,dbframe_sqlite-method}
 \alias{sql,dbframe_sqlite-method}
 \alias{sql}
+\alias{tablename}
+\alias{tablename,dbframe-method}
+\alias{readonly}
+\alias{dbConnect,dbframe-method}
+\alias{dbConnect,dbframe_sqlite-method}
+\alias{readonly,dbframe-method}
 \alias{dbname}
 
 \newcommand{\sql}{\acronym{sql}}

@@ -1,5 +1,5 @@
 export(booktabs, clear, dbframe, dbname,
-       "insert<-", readonly, rows, select, table)
+       "insert<-", readonly, rows, select, tablename)
 exportClasses(dbframe, dbframe_sqlite)
 
 importMethodsFrom(DBI, dbConnect)
