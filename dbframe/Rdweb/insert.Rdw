@@ -3,7 +3,10 @@
 \alias{insert<-}
 \alias{insert<--methods}
 \alias{insert<-,dbframe-method}
-\title{Insert a data frame into the SQL database}
+\title{Insert a data frame into the \sql database}
+
+\newcommand{\sql}{\acronym{sql}}
+\newcommand{\sqlite}{\acronym{sql}ite}
 
 \description{This function inserts data from a data frame into a
   table referenced by a dbframe object.  As the example makes clear
@@ -15,16 +18,15 @@
 \usage{insert(x,\dots) <- value}
 
 \arguments{
-  \item{x}{A dbframe object that links to a table in an SQL database.}
+  \item{x}{A dbframe object that links to a table in an \sql database.}
   \item{value}{A data frame containing the data to insert into the
     database.}
   \item{\dots}{Additional arguments to pass to [[dbWriteTable]].}
 }
 
 \value{Since this is an assignment function, it returns the dbframe
-  [[x]].  The function is useful for its side effect, which is to
-  insert the contents of [[value]] into the table reference by
-  [[x]].}
+  [[x]].  The function is used for its side effect, which is to insert
+  the contents of [[value]] into the table reference by [[x]].}
 
 \seealso{\code{\link{DBI}}, \code{\link{dbWriteTable}}, \code{\link{dbframe-class}}}
 
@@ -32,14 +34,18 @@
 I've implemented this function as a method of the dbframe class;
 presumably it could be extended to other classes.  So, the main steps
 in the defining the function are to define a generic and then set the
-specific method for the dbframe class.
+specific method for the dbframe class.  The difference between the main
+method and the method for [[dbframe_sqlite_temporary]] objects is that
+the second method shouldn't open and close the database connection.
 <<*>>=
     setGeneric("insert<-", function(x,..., value) standardGeneric("insert<-"))
 
     setMethod("insert<-", signature = "dbframe", function(x,...,value) {
       stopifnot(!readonly(x))
-      <<Connect to database and determine whether the table exists>>
+      dbc <- dbConnect(x)
+      <<Determine whether the table exists>>
       <<Write to database and disconnect>>
+      dbDisconnect(dbc)
       return(x)
     })
 @
@@ -49,14 +55,14 @@ whether the table already exists in the database.  If it does, we
 find out which columns in [[value]] already exists, because we will
 only insert those columns into the database.  If the table does not
 exist, we insert all of the columns of [[value]].
-<<Connect to database and determine whether the table exists>>=
-    dbc <- dbConnect(x)
-    cols <- if (dbExistsTable(dbc, table(x))) {
-      colnames <- names(select(x, limit = 0))
-      colnames[colnames %in% names(value)]
-    } else {
-      names(value)
-    }
+<<Determine whether the table exists>>=
+    cols <-
+      if (dbExistsTable(dbc, tablename(x))) {
+        colnames <- names(select(x, limit = 0))
+        colnames[colnames %in% names(value)]
+      } else {
+        names(value)
+      }
 @
 
 Writing to the database is straightforward---we just use the
@@ -65,16 +71,15 @@ frame [[value]] are rearranged to agree with the table in the
 database automatically by indexing [[value]] with the vector
 [[cols]] determined above.
 <<Write to database and disconnect>>=
-    dbWriteTable(dbc, table(x), value[, cols, drop=FALSE],
+    dbWriteTable(dbc, tablename(x), value[, cols, drop=FALSE],
                  row.names = FALSE, overwrite = FALSE, append = TRUE,...)
-    dbDisconnect(dbc)
 @
 }
 
 \examples{
 data(chickwts)
-filename <- "/tmp/example.db"
-chicksdb <- dbframe("table91", dbdriver = "SQLite", 
+filename <- tempfile(fileext = ".db")
+chicksdb <- dbframe("insert1", dbdriver = "SQLite", 
                     dbname = filename, clear = TRUE)
 ## Add some records
 insert(chicksdb) <- chickwts[1:2,]

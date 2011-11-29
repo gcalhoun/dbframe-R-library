@@ -27,11 +27,10 @@
 \section{Implementation}{
 [[head]] and [[tail]] are really basic functions; the implementation
 is pretty straightforward.  The only complication is that the
-\dQuote{\ldots} arguments an be passed multiple times, so I pull them
+\dQuote{\ldots} arguments can be passed multiple times, so I pull them
 out and store them in a list.
 <<*>>=
     head.dbframe <- function(x, n = 6L,...) {
-      <<Process arguments>>
       if (n >= 0) {
         <<Return the first |n| records>>
       } else {
@@ -40,7 +39,6 @@ out and store them in a list.
     }
 
     tail.dbframe <- function(x, n = 6L,...) {
-      <<Process arguments>> 
       if (n >= 0) {
         <<Return the last |n| records>>
       } else {
@@ -51,49 +49,30 @@ out and store them in a list.
 We use select statements with \dQuote{limit} and \dQuote{offset} to get
 the records.
 <<Return the first |n| records>>=
-    return(do.call("select", c(x = x, limit = n, arguments)))
+    return(select(x, limit = n, as.data.frame = TRUE,...))
 @ 
 
 <<Return all but the last |n| records>>=
-    nrecords <- do.call("nrow", c(x = x, arguments))
-    return(do.call("select", 
-                   c(x = x, limit = n + nrecords, arguments)))
+    return(select(x, limit = n + nrow(x), as.data.frame = TRUE,...))
 @
 
 <<Return the last |n| records>>=
-    nrecords <- do.call("nrow", c(x = x, arguments))
-    return(do.call("select", 
-      c(x = x, limit = sprintf("%d,%d", nrecords - n, n), arguments)))
+    return(select(x, limit = sprintf("%d,%d", nrow(x) - n, n), as.data.frame = TRUE,...))
 @ 
 
 <<Return all but the first |n| records>>=
-    nrecords <- do.call("nrow", c(x = x, arguments))
-    return(do.call("select",
-      c(x = x, limit = sprintf("%d,%d", -n, nrecords + n), arguments)))
+    return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n), as.data.frame = TRUE,...))
 @ 
-
-The only complication in handling the arguments is that the
-\dQuote{\ldots} arguments an be passed multiple times, so I pull them
-out and store them in a list.  Also, for compatability with the other
-[[head]] and [[tail]] methods, we don't let the user specify a
-\dQuote{limit} argument, even though we use it in [[select]].
-<<Process arguments>>=
-    arguments <- list(...)
-    if (!is.null(arguments$limit)) {
-      warning("discarding 'limit' argument")
-      arguments$limit <- NULL
-    }
-@ 
-}
 
 \examples{
 data(chickwts)
-filename <- "/tmp/example.db"
-chicksdb <- dbframe("table19", dbdriver = "SQLite", dbname = filename,
+filename <- tempfile(fileext = ".db")
+chicksdb <- dbframe("head1", dbdriver = "SQLite", dbname = filename,
                     data = chickwts)
 head(chickwts)
 tail(chickwts, -60)
 tail(chickwts)
+unlink(filename)
 }
 \keyword{database}
 

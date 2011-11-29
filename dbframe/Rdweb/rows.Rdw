@@ -2,8 +2,8 @@
 \name{rows}
 \alias{rows}
 \title{Extract rows from a data frame and present as a list}
-\description{This is a convenience function that takes a dataframe x
-  and returns a list where each element is a row of x}
+\description{This is a convenience function that takes a dataframe \dQuote{x}
+  and returns a list where each element is a row of x.  I use this for loops.}
 \usage{
 rows(x)
 }

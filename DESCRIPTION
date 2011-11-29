@@ -10,3 +10,4 @@ Description: Some code to conveniently work with databases.
 License: GPL (>= 3)
 LazyLoad: yes
 LazyData: yes
+Collate: dbframe-class.R dbframe.R booktabs.R clear.R rows.R head.R insert.R select.R

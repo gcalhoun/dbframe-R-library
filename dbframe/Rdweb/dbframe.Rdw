@@ -2,17 +2,18 @@
 \name{dbframe}
 \alias{dbframe}
 \alias{dbframe_sqlite}
-\alias{dbframe_unknown}
+\alias{dbframe_sqlite_temporary}
 \title{Create a \code{dbframe} object}
 \description{This is a constructor for the dbframe class.  I've only
   made a constructor for SQLite databases, but will (probably) add
   others in the future.}
 
 \usage{
-dbframe(table, dbdriver = "SQLite", data = NULL, 
+dbframe(table, dbname = NULL, dbdriver = "SQLite", data = NULL, 
         readonly = FALSE, clear = FALSE,...)
 dbframe_sqlite(table, dbname, readonly = FALSE,...)
-dbframe_unknown(table,..., readonly = FALSE)
+dbframe_sqlite_temporary(table, dbname = ":memory:", readonly = FALSE,...)
+dbframe_unknown(table, readonly = FALSE,...)
 }
 \arguments{
   \item{table}{A character string.  This will typically be the name of the table in the
@@ -20,30 +21,31 @@ dbframe_unknown(table,..., readonly = FALSE)
       select statement that defines a query.}
   \item{dbdriver}{The name of the database driver to use.  Right now,
     only "SQLite" is supported.}
-  \item{dbname}{Name of the SQLite database.}
+  \item{dbname}{The file name of the SQLite database.}
   \item{data}{An optional data frame to insert into the table.}
-  \item{readonly}{Logical: prevent the user from inserting or clearing
+  \item{readonly}{Logical: prevent the user from inserting to or clearing
     the linked table.}
   \item{clear}{Logical: if the table already exists, should it be
       removed before making the link?}
-  \item{\dots}{Optional arguments.}
+  \item{\dots}{Optional arguments that will be stored (if necessary) and
+    added to \dQuote{dbConnect}}
 }
 
 \details{This function constructs a new [[dbframe]] objet referencing
   the table \dQuote{table} in the database file \dQuote{dbname}.  If
   the argument [[data]] is not null, its values are inserted into the
   table.  If [[clear]] is [[TRUE]], any existing version of the table
-  is removed first.}  \value{Returns a \code{dbframe} object.  For
-  SQLite, the extended math functions are enabled.
+  is removed first.
 
-  I'll repeat this a few times throughout the documentation, but
   [[dbframe_unknown]] is a blind guess at a general way to implement a
-  generic constructor.  It may or may not work, and I haven't tested it
-  yet.  The optional arguments are stored (in a list) as a slot of the
-  [[dbframe_unknown]] object and are passed to [[dbConnect]].  If you
-  use it (successfully or unsuccessfully), please let me know and
-  suggest changes/improvements.
-  }
+  generic constructor.  It may or may not work and I haven't tested it
+  yet.  The optional arguments are stored (as a list) as a slot of the
+  [[dbframe]] object and are passed to [[dbConnect]].  If you use it,
+  please let me know and suggest changes/improvements.
+}
+
+\value{Returns a \code{dbframe} object.}
+
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \seealso{\code{\link{dbframe-class}}, \code{\link{clear}}, \code{\link{insert<-}}}
 
@@ -56,37 +58,52 @@ connection to the database (I have no idea if this will work well or
 not; if you use it, please be careful and give me feedback on how well
 it goes).
 <<*>>=
-    dbframe <- function(table, dbdriver = "SQLite", data = NULL,
-                        readonly = FALSE, clear = FALSE,...) {
+    dbframe <- function(table, dbname = NULL, dbdriver = "SQLite",
+                        data = NULL, readonly = FALSE, clear = FALSE,...) {
       x <- switch(dbdriver, 
-                  "SQLite" = dbframe_sqlite(table, readonly,...),
+                  "SQLite" = {
+                    if (is.null(dbname)) {
+                      warning("'dbname' is null; setting to ':memory:'")
+                      dbname <- ":memory:"
+                    }
+                    if (dbname %in% c(":memory:", "")) {
+                      dbframe_sqlite_temporary(table, dbname, readonly,...)
+                    } else {
+                      dbframe_sqlite(table, dbname, readonly,...)
+                    }
+                  },
                   dbframe_unknown(table, readonly,...))
-      <<Clear old table if appropriate>>
-      <<Insert new data into table>>
+      <<Clear old table and insert new data>>
       return(x)
     }
 
-    <<Define ``dbframe_sqlite''>>
-    <<Define ``dbframe_unknown''>>
+    <<Define "dbframe_sqlite">>
+    <<Define "dbframe_sqlite_temporary">>
+    <<Define "dbframe_unknown">>
 @ 
 
-
-<<Clear old table if appropriate>>=
+Manipulating the [[dbframe]] object after creating it is easy and we
+just use the existing [[dbframe]] methods.
+<<Clear old table and insert new data>>=
     if (clear) clear.result <- clear(x)
-@
-<<Insert new data into table>>=
-    if (!is.null(data)) insert(x) <- as.data.frame(data)
+    if (!is.null(data)) insert(x) <- data
 @
 
 [[dbframe_sqlite]] makes sure that the right [[RSQLite]] libraries are
 loaded and creates a new [[dbframe_sqlite]] object.
-<<Define ``dbframe_sqlite''>>=
+<<Define "dbframe_sqlite">>=
     dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
       <<Load SQLite libraries>>
-      return(new("dbframe_sqlite", table = table,
-                 readonly = readonly, dbname = dbname))
+      return(new("dbframe_sqlite", table = table, dbname = dbname,
+                 readonly = readonly, dbConnect.arguments = list(...)))
     }
 @
+
+<<Define "dbframe_sqlite_temporary">>=
+    dbframe_sqlite_temporary <- function(table, dbname = ":memory:",
+                                         readonly = FALSE,...)
+      stop("Temporary SQLite databases aren't implemented.")
+@     
 
 The [[dbframe]] package only suggests the [[RSQLite]] and
 [[RSQLite.extfuns]] packages; it doesn't depend formally on them.
@@ -107,9 +124,9 @@ explicity.
 
 [[dbframe_unknown]] is kind of a crapshoot.  It stores the optional
 arguments in a list so that it can pass them to [[dbConnect]] as needed.
-<<Define ``dbframe_unknown''>>=
-    dbframe_unknown <- function(table,...,readonly = FALSE) {
-      return(new("dbframe_unknown", table = table, 
+<<Define "dbframe_unknown">>=
+    dbframe_unknown <- function(table, readonly = FALSE,...) {
+      return(new("dbframe", table = table, 
                  readonly = readonly, dbConnect.arguments = list(...)))
     }
 @ 
@@ -117,16 +134,16 @@ arguments in a list so that it can pass them to [[dbConnect]] as needed.
 }
 
 \examples{
-filename <- "/tmp/example.db"
 data(chickwts)
-example.sqlite <- dbframe("table7", dbname = filename, 
-                          dbdriver = "SQLite", data = chickwts)
-tail(example.sqlite)
+filename <- tempfile(fileext = ".db")
+example <- dbframe("dbframe1", dbname = "filename", dbdriver = "SQLite",
+                   data = chickwts)
+tail(example)
 ## an example where "table" is a select statement on its own
-example.sqlite2 <- 
-  dbframe("(select min(weight) as smallest from table7)",
-          dbname = filename, dbdriver = "SQLite")
-select(example.sqlite2)
+% example2 <- 
+%   dbframe("(select min(weight) as smallest from dbframe)",
+%           dbname = filename, dbdriver = "SQLite")
+% select(example.sqlite2)
 
 ## clean up
 unlink(filename)

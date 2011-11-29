@@ -20,49 +20,42 @@ classes could be defined as well.
 <<*>>=
     setGeneric("clear", function(...)
                standardGeneric("clear"), signature = "...")
+
     setMethod("clear", signature = "dbframe", function(...) {
       x <- list(...)
-      <<Check that all arguments have the correct type>>
       sapply(x, function(y) {
-      <<Remove table referenced by "y" from database>>})})
+        stopifnot(!readonly(y))
+        dbc <- dbConnect(y)
+        results <- <<Remove table referenced by "y" from database>>
+        dbDisconnect(dbc)
+	results
+      })})
 @  %
 Removing the table is pretty easy since we can just use methods
 defined by DBI.
 <<Remove table referenced by "y" from database>>=
-    dbc <- dbConnect(y)
-    res <- if (table(y) %in% dbListTables(dbc)) {
-      stopifnot(!readonly(y))
-      dbRemoveTable(dbc, table(y),...)
-    } else {
-      FALSE
-    }
-    dbDisconnect(dbc)
+res <- 
+  if (is.linked(y)) {
+    dbRemoveTable(dbc, tablename(y),...)
+  } else {
+    FALSE
+  }
 @
-
-More sophisticated input checking might be desirable, but right now I
-just check whether all of the arguments are [[dbfame]]s.
-<<Check that all arguments have the correct type>>=
-    if (!all(sapply(x, function(y) is(y, "dbframe")))) 
-      stop("All arguments must be dbframes")
-@ 
 }
 
 \seealso{dbRemoveTable}
 
 \examples{
-filename <- "/tmp/example.db"
-example.dbframe <- dbframe("table2", dbname = filename)
-example2.dbframe <- dbframe("table3", dbname = filename)
+filename <- tempfile(fileext = ".db")
+example.dbframe <- dbframe("clear1", dbname = filename)
+example2.dbframe <- dbframe("clear2", dbname = filename)
 clear(example.dbframe, example2.dbframe)
 
 data(chickwts)
 insert(example.dbframe) <- chickwts
 head(example.dbframe)
 clear(example.dbframe)
-\dontrun{
 head(example.dbframe)
-}
-
 unlink(filename)
 }
 \keyword{database}
