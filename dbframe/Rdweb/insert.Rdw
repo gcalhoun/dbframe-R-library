@@ -1,12 +1,11 @@
 % -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+\newcommand{\sql}{\acronym{sql}}
+\newcommand{\sqlite}{\acronym{sql}ite}
 \name{insert<-}
 \alias{insert<-}
 \alias{insert<--methods}
 \alias{insert<-,dbframe-method}
 \title{Insert a data frame into the \sql database}
-
-\newcommand{\sql}{\acronym{sql}}
-\newcommand{\sqlite}{\acronym{sql}ite}
 
 \description{This function inserts data from a data frame into a
   table referenced by a dbframe object.  As the example makes clear
@@ -28,7 +27,7 @@
   [[x]].  The function is used for its side effect, which is to insert
   the contents of [[value]] into the table reference by [[x]].}
 
-\seealso{\code{\link{DBI}}, \code{\link{dbWriteTable}}, \code{\link{dbframe-class}}}
+\seealso{The DBI package and documentation, \code{\link{dbWriteTable}}, \code{\link{dbframe-class}}}
 
 \section{Implementation}{
 I've implemented this function as a method of the dbframe class;

@@ -2,6 +2,7 @@
 \name{clear}
 \alias{clear}
 \alias{clear-methods}
+\alias{clear,dbframe-method}
 \title{Remove a table from the database}
 \description{The function [[clear]] removes the tables associated with
 a collection of [[dbframe]] objects from their data bases.}

@@ -63,7 +63,7 @@ the records.
 <<Return all but the first |n| records>>=
     return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n), as.data.frame = TRUE,...))
 @ 
-
+}
 \examples{
 data(chickwts)
 filename <- tempfile(fileext = ".db")
