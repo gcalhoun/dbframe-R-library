@@ -11,15 +11,20 @@ tord := ~/Desktop/illiterate.bzr/tord
 
 LATEXMKFLAGS := -pdf -silent
 
-Rsource := $(wildcard $(package)/Rdweb/*.Rdw) 
-Rsource2:= $(wildcard $(package)/Rdweb/*.Rd)
+sourcedir := Rfiles
+Rsource := $(wildcard $(sourcedir)/*.Rdw) 
+Rsource2:= $(wildcard $(sourcedir)/*.Rd)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
-           $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/R/%.R))
-Rdocs   := $(Rsource:$(package)/Rdweb/%.Rdw=$(package)/man/%.Rd)
-Rdocs2  := $(Rsource2:$(package)/Rdweb/%=$(package)/man/%)
-Rtests  := $(wildcard $(package)/tests/*.R) $(wildcard $(package)/inst/tests/*.R)
+           $(Rsource:$(sourcedir)/%.Rdw=$(package)/R/%.R))
+Rdocs   := $(Rsource:$(sourcedir)/%.Rdw=$(package)/man/%.Rd)
+Rdocs2  := $(Rsource2:$(sourcedir)/%=$(package)/man/%)
+Rtests  := $(package)/inst/tests/test-select.R
+# Rtests  := $(Rsource:$(sourcedir)/%.Rdw=$(package)/inst/tests/test-%.R)
+Rtests2 := $(wildcard $(package)/tests/*.R) $(wildcard $(package)/inst/tests/*.R)
 
-.PHONY: all build burn pdf zip
+files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(Rtests2) $(package)/DESCRIPTION
+
+.PHONY: all build burn pdf zip files
 
 all: check zip install
 zip: $(zipfile)
@@ -31,16 +36,21 @@ install: check
 	sudo $(RR) CMD INSTALL --debug $(package)
 	sudo $(RD) CMD INSTALL --debug $(package)
 	touch $@
+files: $(files)
 
-$(Rcode): $(package)/R/%.R: $(package)/Rdweb/%.Rdw
+$(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.Rdw
+	mkdir -p $(package)/inst/tests
+	$(notangle) -R$(@F) $< | cpif $@
+
+$(Rcode): $(package)/R/%.R: $(sourcedir)/%.Rdw
 	mkdir -p $(package)/R
-	$(notangle) $< > $@
+	$(notangle) $< | cpif $@
 
-$(Rdocs): $(package)/man/%.Rd: $(package)/Rdweb/%.Rdw
+$(Rdocs): $(package)/man/%.Rd: $(sourcedir)/%.Rdw
 	mkdir -p $(package)/man
 	$(noweave) -delay -backend $(tord) $< > $@
 
-$(Rdocs2): $(package)/man/%: $(package)/Rdweb/%
+$(Rdocs2): $(package)/man/%: $(sourcedir)/%
 	mkdir -p $(package)/man
 	cp $< $@
 
@@ -50,6 +60,6 @@ $(package)/DESCRIPTION: DESCRIPTION
 %.pdf: %.tex
 	$(RR) CMD texi2dvi -c -q -p $<
 
-check: $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION ## $(package)/NAMESPACE
+check: $(files) $(package)/NAMESPACE
 	$(RR) CMD check $(package)
 	touch $@
