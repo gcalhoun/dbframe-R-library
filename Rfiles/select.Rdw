@@ -4,7 +4,7 @@
 \alias{select-methods}
 \alias{select,dbframe,character-method}
 \alias{select,dbframe,list-method}
-\alias{select,dbframe,missing-method}
+\alias{select,default,missing-method}
 \alias{select,list,character-method}
 \alias{generate.select.sql}
 \title{Retrieve records from a dbframe}
@@ -70,12 +70,20 @@ done by [[generate.select.sql]].
     setGeneric("select", function(x, cols, as.data.frame = TRUE,...)
                standardGeneric("select"))
 
-    setMethod("select", signature = c("dbframe", "missing"), 
+    setMethod("select", signature = c("ANY", "missing"), 
               function(x, cols, as.data.frame = TRUE,...) {
-                <<Execute select for c("dbframe", "missing")>>})
+                <<Execute select for c("ANY", "missing")>>})
     setMethod("select", signature = c("dbframe", "character"), 
               function(x, cols, as.data.frame = TRUE,...) {
                 <<Execute select for c("dbframe", "character")>>})
+
+setMethod("select", signature = c("data.frame", "character"),
+              function(x, cols, as.data.frame = TRUE,...) {
+                <<Handle arguments and set up the local environment>>
+		<<Export the new data frame to a temporary SQLite database>>
+                <<Query the new database and close database connection>>
+                return(queryresults)
+              })
 @
 
 \subsection{Assembling the \sql select statement}{
@@ -155,7 +163,13 @@ contains a clause for the \sql statement.
 }
 \subsection{Details of argument handling}{
   The individual methods just call [[generate.select.sql]] and execute
-  the select statement.  
+  the select statement.    
+If [[cols]] is "missing" it returns results for
+[[cols]] equal to "*" (i.e. all of the columns of the table).
+<<Execute select for c("ANY", "missing")>>=
+    select(x, "*", as.data.frame,...)
+@ 
+
 <<Execute select for c("dbframe", "character")>>=
     if (!is.linked(x)) {
       warning("Table does not exist in the data base")
@@ -182,12 +196,75 @@ contains a clause for the \sql statement.
     return(d)
 @
 
-If [[cols]] is "missing" it returns results for
-[[cols]] equal to "*" (i.e. all of the columns of the table).
-<<Execute select for c("dbframe", "missing")>>=
-    select(x, "*", as.data.frame,...)
+<<Handle arguments and set up the local environment>>=
+    if (!as.data.frame) warning("'select' will return a data.frame when called on a data.frame.  I'm ignoring your argument.")
+    arguments <- list(...)
+    tablename <- "dataframe"
+    require(RSQLite)
+    require(RSQLite.extfuns)
 @ 
+
+<<Export the new data frame to a temporary SQLite database>>=
+    dbc <- dbConnect("SQLite", dbname = "")
+    dbWriteTable(dbc, tablename, x, row.names = FALSE)
+@ 
+
+<<Query the new database and close database connection>>=
+    sql.statement <- do.call("generate.select.sql",
+                             c(table = tablename, cols = cols, arguments))
+    queryresults <- dbGetQuery(dbc, sql.statement)
+    dbDisconnect(dbc)
+@
 }}
+
+\section{Unit Tests}{
+I just have some basic sanity-check type unit tests; i.e. do the
+functions run at a minimal level.
+<<test-select.R>>=
+    require(testthat)
+    context("Unit tests for the 'select' method")
+    data(chickwts)
+    chickwts$feed <- as.character(chickwts$feed)
+    test_that("insert and select work", {
+      <<Individual tests that insert and select work>>})
+    test_that("column renaming scheme works", {
+      <<Individual tests that column renaming works>>})
+@ 
+
+First we'll check that the methods defined on data frames work, then
+that they work for dbframes.
+<<Individual tests that insert and select work>>=
+    expect_that(chickwts, is_equivalent_to(select(chickwts)))
+    <<Create temporary test database and dbframe>>
+    insert(testdbframe) <- chickwts
+    expect_that(chickwts, is_equivalent_to(select(testdbframe)))
+    <<Remove temporary test database>>
+@ 
+
+<<Individual tests that column renaming works>>=
+    expect_that(
+      c("AverageWeight", "feed"), 
+      is_identical_to(names(select(chickwts, 
+           c(AverageWeight = "avg(weight)"), group.by = "feed"))))
+    <<Create temporary test database and dbframe>>
+    insert(testdbframe) <- chickwts
+    expect_that(
+      c("AverageWeight", "feed"), 
+      is_identical_to(names(select(chicksdb, 
+           c(AverageWeight = "avg(weight)"), group.by = "feed"))))
+    <<Remove temporary test database>>
+@ 
+
+<<Create temporary test database and dbframe>>=
+    testdbfile <- tempfile(fileext = ".db")    
+    testdbframe <- dbframe("select1", testdbfile)
+    clear(testdbfarme)
+@ 
+
+<<Remove temporary test database>>=
+    unlink(testdbfile)
+@ 
+}
 
 \examples{
 filename <- tempfile(fileext = ".db")
@@ -195,9 +272,12 @@ data(chickwts)
 chicksdb <- dbframe("select1", dbname = filename, 
                     clear = TRUE, data = chickwts)
 select(chicksdb, where = "weight > 200", order.by = "weight")
-select(chicksdb, "avg(weight) as AverageWeight", group.by = "feed",
-       having = "AverageWeight > 250")
+select(chicksdb, "avg(weight)", group.by = "feed")
+## select(chicksdb, c(AverageWeight = "avg(weight)"), group.by = "feed",
+##        having = "AverageWeight > 250")
 
+## and an example of querying the data frame directly
+select(chickwts, "avg(weight)", group.by = "feed")
 }
 
 \keyword{methods}
