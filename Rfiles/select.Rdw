@@ -2,6 +2,8 @@
 \name{select}
 \alias{select}
 \alias{select-methods}
+\alias{select,ANY,missing-method}
+\alias{select,data.frame,character-method}
 \alias{select,dbframe,character-method}
 \alias{select,dbframe,list-method}
 \alias{select,default,missing-method}
@@ -107,6 +109,10 @@ both of those.
       } else if (is.null(group.by)) {
         cols
       } else {
+        if (is.null(names(cols)))
+          names(cols) <- rep("", length(cols))
+        if (is.null(names(group.by))) 
+          names(group.by) <- rep("", length(group.by))
         c(group.by[!(names(group.by) %in% names(cols))
                     |  nchar(names(group.by)) == 0], cols)
       }
@@ -175,9 +181,8 @@ If [[cols]] is "missing" it returns results for
       warning("Table does not exist in the data base")
       return(list())
     }
-    arguments <- list(...)
-    sql.statement <- do.call("generate.select.sql",
-                       c(table = tablename(x), cols = cols, arguments))
+    arguments <- list(table = tablename(x), cols = cols,...)
+    sql.statement <- do.call("generate.select.sql", arguments)
     if (as.data.frame) {
       dbc <- dbConnect(x)
       d <- do.call("dbGetQuery", c(conn = dbc, statement = sql.statement,
@@ -198,20 +203,18 @@ If [[cols]] is "missing" it returns results for
 
 <<Handle arguments and set up the local environment>>=
     if (!as.data.frame) warning("'select' will return a data.frame when called on a data.frame.  I'm ignoring your argument.")
-    arguments <- list(...)
     tablename <- "dataframe"
     require(RSQLite)
     require(RSQLite.extfuns)
 @ 
 
 <<Export the new data frame to a temporary SQLite database>>=
-    dbc <- dbConnect("SQLite", dbname = "")
+    dbc <- dbConnect("SQLite", dbname = ":memory:")
     dbWriteTable(dbc, tablename, x, row.names = FALSE)
 @ 
 
 <<Query the new database and close database connection>>=
-    sql.statement <- do.call("generate.select.sql",
-                             c(table = tablename, cols = cols, arguments))
+    sql.statement <- generate.select.sql(tablename, cols,...)
     queryresults <- dbGetQuery(dbc, sql.statement)
     dbDisconnect(dbc)
 @
@@ -243,14 +246,14 @@ that they work for dbframes.
 
 <<Individual tests that column renaming works>>=
     expect_that(
-      c("AverageWeight", "feed"), 
+      c("feed", "AverageWeight"), 
       is_identical_to(names(select(chickwts, 
            c(AverageWeight = "avg(weight)"), group.by = "feed"))))
     <<Create temporary test database and dbframe>>
     insert(testdbframe) <- chickwts
     expect_that(
-      c("AverageWeight", "feed"), 
-      is_identical_to(names(select(chicksdb, 
+      c("feed", "AverageWeight"), 
+      is_identical_to(names(select(testdbframe, 
            c(AverageWeight = "avg(weight)"), group.by = "feed"))))
     <<Remove temporary test database>>
 @ 
@@ -258,7 +261,7 @@ that they work for dbframes.
 <<Create temporary test database and dbframe>>=
     testdbfile <- tempfile(fileext = ".db")    
     testdbframe <- dbframe("select1", testdbfile)
-    clear(testdbfarme)
+    clear(testdbframe)
 @ 
 
 <<Remove temporary test database>>=
@@ -272,12 +275,12 @@ data(chickwts)
 chicksdb <- dbframe("select1", dbname = filename, 
                     clear = TRUE, data = chickwts)
 select(chicksdb, where = "weight > 200", order.by = "weight")
-select(chicksdb, "avg(weight)", group.by = "feed")
-## select(chicksdb, c(AverageWeight = "avg(weight)"), group.by = "feed",
-##        having = "AverageWeight > 250")
+select(chicksdb, c(averageweight = "avg(weight)"), group.by = "feed")
+select(chicksdb, c(averageweight = "avg(weight)"), group.by = "feed",
+       having = "averageweight > 250")
 
 ## and an example of querying the data frame directly
-select(chickwts, "avg(weight)", group.by = "feed")
+select(chickwts, c(averageweight = "avg(weight)"), group.by = c(thefeed = "feed"))
 }
 
 \keyword{methods}
