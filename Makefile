@@ -18,11 +18,9 @@ Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
            $(Rsource:$(sourcedir)/%.Rdw=$(package)/R/%.R))
 Rdocs   := $(Rsource:$(sourcedir)/%.Rdw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(sourcedir)/%=$(package)/man/%)
-Rtests  := $(package)/inst/tests/test-select.R
-# Rtests  := $(Rsource:$(sourcedir)/%.Rdw=$(package)/inst/tests/test-%.R)
-Rtests2 := $(wildcard $(package)/tests/*.R) $(wildcard $(package)/inst/tests/*.R)
+Rtests  := $(Rsource:$(sourcedir)/%.Rdw=$(package)/inst/tests/test-%.R)
 
-files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(Rtests2) $(package)/DESCRIPTION
+files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION
 
 .PHONY: all build burn pdf zip files
 
