@@ -136,9 +136,9 @@ Finally, we remove duplicates in a slightly clever way
 
 \section{Unit tests}{
 <<test-booktabs.R>>=
-    context("Tests for 'booktabs'")
-    filename <- tempfile(fileext = ".db")
+    library(testthat)
     library(xtable)
+    filename <- tempfile(fileext = ".db")
 
     data(morley)
     test_that("booktabs executes at all", {

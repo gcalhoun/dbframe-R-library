@@ -224,8 +224,7 @@ If [[cols]] is "missing" it returns results for
 I just have some basic sanity-check type unit tests; i.e. do the
 functions run at a minimal level.
 <<test-select.R>>=
-    require(testthat)
-    context("Unit tests for the 'select' method")
+    library(testthat)
     data(chickwts)
     chickwts$feed <- as.character(chickwts$feed)
     test_that("insert and select work", {
