@@ -1,5 +1,5 @@
 package := dbframe
-version := 0.2.1
+version := 0.2-1
 zipfile := $(package)_$(version).tar.gz
 
 RD       := /home/gcalhoun/Desktop/R-devel/build/bin/R
@@ -7,11 +7,11 @@ RR       := /home/gcalhoun/Desktop/R-devel/R-2-14-branch/bin/R
 latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
 noweave  := noweave
 notangle := notangle
-tord := ~/Desktop/illiterate.bzr/tord
+tord     := ./$(package)/shell/tord
 
 LATEXMKFLAGS := -pdf -silent
 
-sourcedir := Rfiles
+sourcedir := $(package)/webs
 Rsource := $(wildcard $(sourcedir)/*.Rdw) 
 Rsource2:= $(wildcard $(sourcedir)/*.Rd)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
@@ -35,6 +35,9 @@ install: check
 	sudo $(RD) CMD INSTALL --debug $(package)
 	touch $@
 files: $(files)
+online: $(zipfile)
+	scp $< econ22.econ.iastate.edu:public_html/software
+	touch $@
 
 $(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.Rdw
 	mkdir -p $(package)/inst/tests
