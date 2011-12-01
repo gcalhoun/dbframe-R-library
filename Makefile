@@ -28,15 +28,16 @@ all: check zip install
 zip: $(zipfile)
 $(zipfile): check 
 	$(RR) CMD build $(package)
+$(package).Rcheck/$(package)-manual.pdf: check
 burn: 
-	rm $(package)/man/* $(package)/R/*
+	rm $(package)/man/* $(package)/R/* $(package)/inst/tests/*
 install: check
 	sudo $(RR) CMD INSTALL --debug $(package)
 	sudo $(RD) CMD INSTALL --debug $(package)
 	touch $@
 files: $(files)
-online: $(zipfile)
-	scp $< econ22.econ.iastate.edu:public_html/software
+online: $(zipfile) $(package).Rcheck/$(package)-manual.pdf
+	scp $^ econ22.econ.iastate.edu:public_html/software
 	touch $@
 
 $(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.Rdw
