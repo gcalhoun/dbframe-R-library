@@ -2,9 +2,8 @@ package := dbframe
 version := 0.2-1
 zipfile := $(package)_$(version).tar.gz
 
-RD       := /home/gcalhoun/Desktop/R-devel/build/bin/R
-RR       := /home/gcalhoun/Desktop/R-devel/R-2-14-branch/bin/R
-latexmk  := /usr/local/texlive/2011/bin/x86_64-linux/latexmk
+R        := R
+latexmk  := latexmk
 noweave  := noweave
 notangle := notangle
 tord     := ./$(package)/shell/tord
@@ -27,13 +26,12 @@ files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION
 all: check zip install
 zip: $(zipfile)
 $(zipfile): check 
-	$(RR) CMD build $(package)
+	$(R) CMD build $(package)
 $(package).Rcheck/$(package)-manual.pdf: check
 burn: 
 	rm $(package)/man/* $(package)/R/* $(package)/inst/tests/*
 install: check
-	sudo $(RR) CMD INSTALL --debug $(package)
-	sudo $(RD) CMD INSTALL --debug $(package)
+	sudo $(R) CMD INSTALL --debug $(package)
 	touch $@
 files: $(files)
 online: $(zipfile) $(package).Rcheck/$(package)-manual.pdf
@@ -60,8 +58,8 @@ $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
 %.pdf: %.tex
-	$(RR) CMD texi2dvi -c -q -p $<
+	$(R) CMD texi2dvi -c -q -p $<
 
 check: $(files) $(package)/NAMESPACE
-	$(RR) CMD check $(package)
+	$(R) CMD check $(package)
 	touch $@
