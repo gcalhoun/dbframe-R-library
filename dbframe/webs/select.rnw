@@ -1,0 +1,286 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+\name{select}
+\alias{select}
+\alias{select-methods}
+\alias{select,ANY,missing-method}
+\alias{select,data.frame,character-method}
+\alias{select,dbframe,character-method}
+\alias{select,dbframe,list-method}
+\alias{select,default,missing-method}
+\alias{select,list,character-method}
+\alias{generate.select.sql}
+\title{Retrieve records from a dbframe}
+\newcommand{\sql}{\acronym{sql}}
+\newcommand{\sqlite}{\acronym{sql}ite}
+
+\description{[[select]] is a wrapper for the \sql select query and is
+  used to retrieve records from a [[dbframe]] object.
+  [[generate.select.sql]] assembles a valid \sql select statement from
+  its arguments.  The arguments map to clauses in the \sql select
+  statement, so you may need to consult an introduction to \sql to best
+  use these functions.}
+
+\usage{
+select(x, cols, as.data.frame = TRUE,...)
+
+generate.select.sql(table, cols = "*", where = NULL, group.by = NULL, 
+                    having = NULL, order.by = NULL, limit = NULL,...)
+}
+
+\arguments{
+  \item{x}{A [[dbframe]] object that references the table of interest.}
+  \item{table}{A character object containing the name of the \sql table to query.}
+  \item{cols}{A character vector containing the column names (or
+    functions of the column names) to retrieve from the database.}
+  \item{where}{A character object that contains conditions to use to
+    filter the records.}
+  \item{group.by}{A character vector that defines groups of records to
+    combine with an aggregate function.}
+  \item{having}{A character object that filters the groups defined by \dQuote{group.by}.}
+  \item{order.by}{A character vector that lists the columns to be used
+    for sorting the results.}
+  \item{limit}{A character vector or number that limits and offsets the
+    \sql query results.}
+  \item{\dots}{Additional arguments to pass to [[dbGetQuery]].}
+  \item{as.data.frame}{Logical; if [[TRUE]], execute the query and
+  return the results as a data frame.  If [[FALSE]], return a dbframe
+  that has the \sql statement for the query as its \dQuote{table}}
+}
+
+\references{
+\sql as understood by \sqlite. \url{http://www.sqlite.org/lang_select.html}
+}
+
+\section{Implementation}{
+The inidividual methods do some minor parsing, but most of the work is
+done by [[generate.select.sql]].
+  
+<<*>>=
+    generate.select.sql <- function(table, cols = "*", where = NULL, 
+      group.by = NULL, having = NULL, order.by = NULL, limit = NULL, ...) {
+
+      <<Format the "select" part of the statement>>
+      <<Format the "group by" part of the statement>>
+      <<Format the "order by" part of the statement>>
+      <<Format the "having" part of the statement>>
+      <<Format the "where" part of the statement>>
+      <<Format the "limit" part of the statement>>
+      return(paste("select", cols, "from", table, where, 
+                   group.by, having, order.by, limit))
+    }
+
+    setGeneric("select", function(x, cols, as.data.frame = TRUE,...)
+               standardGeneric("select"))
+
+    setMethod("select", signature = c("ANY", "missing"), 
+              function(x, cols, as.data.frame = TRUE,...) {
+                <<Execute select for c("ANY", "missing")>>})
+    setMethod("select", signature = c("dbframe", "character"), 
+              function(x, cols, as.data.frame = TRUE,...) {
+                <<Execute select for c("dbframe", "character")>>})
+
+setMethod("select", signature = c("data.frame", "character"),
+              function(x, cols, as.data.frame = TRUE,...) {
+                <<Handle arguments and set up the local environment>>
+		<<Export the new data frame to a temporary SQLite database>>
+                <<Query the new database and close database connection>>
+                return(queryresults)
+              })
+@
+
+\subsection{Assembling the \sql select statement}{
+To write the "select" part, we add the [[group.by]] variables and the
+[[cols]] variables together (and store them in [[cols]]).
+<<Format the "select" part of the statement>>=
+    <<Add new group.by variables in front of cols variables>>
+    labels <- names(cols)
+    labels[nchar(labels) > 0] <- paste("AS", labels[nchar(labels) > 0])
+    cols <- paste(cols, labels, collapse = ", ")
+@ 
+To save typing, I assume that we want to retrieve the grouping variables
+and so we don't have to specify them explicitly in the [[cols]] vector.
+I think it makes sense to have the grouping variables on the left side
+of the results set instead of the right side.  The next code chunk does
+both of those.
+<<Add new group.by variables in front of cols variables>>=
+    cols <-
+      if (is.null(cols)) {
+        group.by
+      } else if (is.null(group.by)) {
+        cols
+      } else {
+        if (is.null(names(cols)))
+          names(cols) <- rep("", length(cols))
+        if (is.null(names(group.by))) 
+          names(group.by) <- rep("", length(group.by))
+        c(group.by[!(names(group.by) %in% names(cols))
+                    |  nchar(names(group.by)) == 0], cols)
+      }
+@ 
+
+Managing the other arguments is easy.  If they're [[NULL]] we replace
+the variable with an empty string; if they're not, we add the
+appropriate label and replace the variable with a character object that
+contains a clause for the \sql statement.
+<<Format the "group by" part of the statement>>=
+    group.by <- 
+      if (is.null(group.by)) {
+        "" 
+      } else {
+        paste("group by", paste(group.by, collapse = ", "))
+      }
+@ 
+
+<<Format the "order by" part of the statement>>=
+    order.by <- 
+      if (is.null(order.by)) {
+        ""
+      } else {
+        paste("order by", paste(order.by, collapse = ", "))
+      }
+@ 
+
+<<Format the "having" part of the statement>>=
+    having <-
+      if (is.null(having)) {
+        ""
+      } else {
+        paste("having", having)
+      }
+@ 
+
+<<Format the "where" part of the statement>>=
+    where <-
+      if (is.null(where)) {
+        "" 
+      } else {
+        paste("where", where)
+      }
+@ 
+
+<<Format the "limit" part of the statement>>=
+    limit <- 
+      if (is.null(limit)) {
+        "" 
+      } else {
+        paste("limit", limit)
+      }
+@ 
+}
+\subsection{Details of argument handling}{
+  The individual methods just call [[generate.select.sql]] and execute
+  the select statement.    
+If [[cols]] is "missing" it returns results for
+[[cols]] equal to "*" (i.e. all of the columns of the table).
+<<Execute select for c("ANY", "missing")>>=
+    select(x, "*", as.data.frame,...)
+@ 
+
+<<Execute select for c("dbframe", "character")>>=
+    if (!is.linked(x)) {
+      warning("Table does not exist in the data base")
+      return(list())
+    }
+    arguments <- list(table = tablename(x), cols = cols,...)
+    sql.statement <- do.call("generate.select.sql", arguments)
+    if (as.data.frame) {
+      dbc <- dbConnect(x)
+      d <- do.call("dbGetQuery", c(conn = dbc, statement = sql.statement,
+                                   arguments))
+      dbDisconnect(dbc)
+    } else {
+      if (is.null(arguments$readonly)) {
+        readonly <- readonly(x)
+      } else {
+        readonly <- arguments$readonly
+        arguments$readonly <- NULL
+      }
+      d <- do.call("new", c(Class = "dbframe", table = sql.statement,
+                            readonly = readonly, dbConnect.arguments = arguments))
+    }
+    return(d)
+@
+
+<<Handle arguments and set up the local environment>>=
+    if (!as.data.frame) warning("'select' will return a data.frame when called on a data.frame.  I'm ignoring your argument.")
+    tablename <- "dataframe"
+    require(RSQLite)
+    require(RSQLite.extfuns)
+@ 
+
+<<Export the new data frame to a temporary SQLite database>>=
+    dbc <- dbConnect("SQLite", dbname = ":memory:")
+    dbWriteTable(dbc, tablename, x, row.names = FALSE)
+@ 
+
+<<Query the new database and close database connection>>=
+    sql.statement <- generate.select.sql(tablename, cols,...)
+    queryresults <- dbGetQuery(dbc, sql.statement)
+    dbDisconnect(dbc)
+@
+}}
+
+\section{Unit Tests}{
+I just have some basic sanity-check type unit tests; i.e. do the
+functions run at a minimal level.
+<<test-select.R>>=
+    library(testthat)
+    data(chickwts)
+    chickwts$feed <- as.character(chickwts$feed)
+    test_that("insert and select work", {
+      <<Individual tests that insert and select work>>})
+    test_that("column renaming scheme works", {
+      <<Individual tests that column renaming works>>})
+@ 
+
+First we'll check that the methods defined on data frames work, then
+that they work for dbframes.
+<<Individual tests that insert and select work>>=
+    expect_that(chickwts, is_equivalent_to(select(chickwts)))
+    <<Create temporary test database and dbframe>>
+    insert(testdbframe) <- chickwts
+    expect_that(chickwts, is_equivalent_to(select(testdbframe)))
+    <<Remove temporary test database>>
+@ 
+
+<<Individual tests that column renaming works>>=
+    expect_that(
+      c("feed", "AverageWeight"), 
+      is_identical_to(names(select(chickwts, 
+           c(AverageWeight = "avg(weight)"), group.by = "feed"))))
+    <<Create temporary test database and dbframe>>
+    insert(testdbframe) <- chickwts
+    expect_that(
+      c("feed", "AverageWeight"), 
+      is_identical_to(names(select(testdbframe, 
+           c(AverageWeight = "avg(weight)"), group.by = "feed"))))
+    <<Remove temporary test database>>
+@ 
+
+<<Create temporary test database and dbframe>>=
+    testdbfile <- tempfile(fileext = ".db")    
+    testdbframe <- dbframe("select1", testdbfile)
+    clear(testdbframe)
+@ 
+
+<<Remove temporary test database>>=
+    unlink(testdbfile)
+@ 
+}
+
+\examples{
+filename <- tempfile(fileext = ".db")
+data(chickwts)
+chicksdb <- dbframe("select1", dbname = filename, 
+                    clear = TRUE, data = chickwts)
+select(chicksdb, where = "weight > 200", order.by = "weight")
+select(chicksdb, c(averageweight = "avg(weight)"), group.by = "feed")
+select(chicksdb, c(averageweight = "avg(weight)"), group.by = "feed",
+       having = "averageweight > 250")
+
+## and an example of querying the data frame directly
+select(chickwts, c(averageweight = "avg(weight)"), group.by = c(thefeed = "feed"))
+}
+
+\keyword{methods}
+\keyword{database}
