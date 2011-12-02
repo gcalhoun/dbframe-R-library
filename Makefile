@@ -11,42 +11,35 @@ tord     := ./$(package)/shell/tord
 LATEXMKFLAGS := -pdf -silent
 
 sourcedir := $(package)/webs
-Rsource := $(wildcard $(sourcedir)/*.Rdw) 
+Rsource := $(wildcard $(sourcedir)/*.rnw) 
 Rsource2:= $(wildcard $(sourcedir)/*.Rd)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
-           $(Rsource:$(sourcedir)/%.Rdw=$(package)/R/%.R))
-Rdocs   := $(Rsource:$(sourcedir)/%.Rdw=$(package)/man/%.Rd)
+           $(Rsource:$(sourcedir)/%.rnw=$(package)/R/%.R))
+Rdocs   := $(Rsource:$(sourcedir)/%.rnw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(sourcedir)/%=$(package)/man/%)
-Rtests  := $(Rsource:$(sourcedir)/%.Rdw=$(package)/inst/tests/test-%.R)
+Rtests  := $(Rsource:$(sourcedir)/%.rnw=$(package)/inst/tests/test-%.R)
 
 files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION
 
-.PHONY: all build burn pdf zip files
+.PHONY: all burn files
 
-all: check zip install
-zip: $(zipfile)
-$(zipfile): check 
-	$(R) CMD build $(package)
+all: check
 $(package).Rcheck/$(package)-manual.pdf: check
+
 burn: 
 	rm $(package)/man/* $(package)/R/* $(package)/inst/tests/*
-install: check
-	sudo $(R) CMD INSTALL --debug $(package)
-	touch $@
-files: $(files)
-online: $(zipfile) $(package).Rcheck/$(package)-manual.pdf
-	scp $^ econ22.econ.iastate.edu:public_html/software
-	touch $@
 
-$(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.Rdw
+files: $(files)
+
+$(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.rnw
 	mkdir -p $(package)/inst/tests
 	$(notangle) -R$(@F) $< | cpif $@
 
-$(Rcode): $(package)/R/%.R: $(sourcedir)/%.Rdw
+$(Rcode): $(package)/R/%.R: $(sourcedir)/%.rnw
 	mkdir -p $(package)/R
 	$(notangle) $< | cpif $@
 
-$(Rdocs): $(package)/man/%.Rd: $(sourcedir)/%.Rdw
+$(Rdocs): $(package)/man/%.Rd: $(sourcedir)/%.rnw
 	mkdir -p $(package)/man
 	$(noweave) -delay -backend $(tord) $< > $@
 
@@ -56,9 +49,6 @@ $(Rdocs2): $(package)/man/%: $(sourcedir)/%
 
 $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
-
-%.pdf: %.tex
-	$(R) CMD texi2dvi -c -q -p $<
 
 check: $(files) $(package)/NAMESPACE
 	$(R) CMD check $(package)
