@@ -1,4 +1,20 @@
 % -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+% Copyright (C) 2011  Gray Calhoun
+
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+
+% This program is distributed in the hope that it will be useful, but
+% WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+% General Public License for more details.
+
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see
+% <http://www.gnu.org/licenses/>.
+
 \name{select}
 \alias{select}
 \alias{select-methods}
@@ -50,7 +66,6 @@ generate.select.sql(table, cols = "*", where = NULL, group.by = NULL,
 \references{
 \sql as understood by \sqlite. \url{http://www.sqlite.org/lang_select.html}
 }
-
 \section{Implementation}{
 The inidividual methods do some minor parsing, but most of the work is
 done by [[generate.select.sql]].
