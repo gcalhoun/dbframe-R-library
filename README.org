@@ -22,7 +22,7 @@ dbframe -- an R to SQL interface
 * Installation
   Installation is a little trickier than it is for most R libraries;
   this package is a "literate program," meaning that the documentation
-  and the code are marked up in the files "dbframe/webs/*.rnw".  The
+  and the code are marked up in the files "dbframe/source/*.rw".  The
   "noweb" program parses those files and 
 
   - writes the code to .R files in the folder "dbframe/R"
@@ -30,17 +30,15 @@ dbframe -- an R to SQL interface
   - writes the individual tests to .R files in the folder
     "dbframe/inst/tests"
 
-  Just to emphasize this point: the .rnw files are *not* Sweave files;
-  they're noweb files.  Noweb can be downloaded at:
-  http://www.cs.tufts.edu/~nr/noweb/
+  Noweb can be downloaded at http://www.cs.tufts.edu/~nr/noweb/
 
   If you have noweb installed, typing 'make' will generate these files
   and then check the package for errors.  You may need to change some
   of the paths to binaries on your system.  Noweb just converts the
-  .rnw files to .Rd files for the documentation, using the shell
-  script provided in this package which is minor modification of the
-  totex script provided by noweb.
+  .rw files to .Rd files for the documentation, using the shell script
+  provided in this package which is minor modification of the totex
+  script provided by noweb.
 
   If you're just interested in trying out the package, it might be
   easiest to download a compressed archive of the full (post makefile)
-  package from my website: http://www.econ.iastate.edu/~gcalhoun
+  package from the downloads page.
