@@ -11,6 +11,7 @@ auto/
 *~
 .Rhistory
 
+dbframe/README
 dbframe/R/*
 dbframe/man/*
 
