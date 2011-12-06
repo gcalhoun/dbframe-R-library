@@ -11,6 +11,7 @@ auto/
 *~
 .Rhistory
 
+dbframe/shell/tord
 dbframe/R/*
 dbframe/man/*
 
