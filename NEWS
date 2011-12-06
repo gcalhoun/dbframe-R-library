@@ -1,3 +1,7 @@
+version 0.2.3:
+
+* Fixed bug in booktabs: formatting the first column of a data frame
+
 version 0.2.2:
 
 * Made the licensing for this package more explicit.

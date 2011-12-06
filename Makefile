@@ -1,5 +1,5 @@
 package := dbframe
-version := 0.2.2
+version := 0.2.3
 zipfile := $(package)_$(version).tar.gz
 
 R        := R

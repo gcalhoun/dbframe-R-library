@@ -135,7 +135,7 @@ point and use the correct minus sign.
 <<Reformat numeric columns>>=
     dframe[,numberformat] <- lapply(which(numberformat), function (i)
       gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
-           format(round(dframe[,i], digits[i]))))))
+           format(round(dframe[,i + !include.rownames], digits[i]))))))
 @ 
 
 
@@ -161,33 +161,14 @@ Finally, we remove duplicates in a slightly clever way
     test_that("booktabs executes at all", {
       expect_that(booktabs(longley), is_a("character"))
     })
-##     set.seed(12)
-##     test_that("Columns that are labeled 'numberformat' are formatted", {
-##       set.seed(12)
-##       d <- data.frame(x = 20 * rnorm(12), y = 20 * rnorm(12))
-      
-##       expect_that(booktabs(d, numberformat = TRUE, purgeduplicates = FALSE, digits = 2, align = "c"),
-##                   prints_text("% latex table generated in R 2.15.0 by xtable 1.6-0 package
-## % Mon Dec  5 16:03:13 2011
-## \begin{tabularx}{\textwidth}{cc}
-##   \toprule x & y \\ 
-##   \midrule $\!\!-29.61$ & $\!\!-15.59$ \\ 
-##   $\enskip31.54$ & $\enskip\enskip0.24$ \\ 
-##   $\!\!-19.13$ & $\enskip\!\!-3.05$ \\ 
-##   $\!\!-18.40$ & $\!\!-14.07$ \\ 
-##   $\!\!-39.65$ & $\enskip23.78$ \\ 
-##   $\enskip\!\!-5.45$ & $\enskip\enskip6.81$ \\ 
-##   $\enskip\!\!-6.31$ & $\enskip10.14$ \\ 
-##   $\!\!-12.57$ & $\enskip\!\!-5.87$ \\ 
-##   $\enskip\!\!-2.13$ & $\enskip\enskip4.47$ \\ 
-##   $\enskip\enskip8.56$ & $\enskip40.14$ \\ 
-##   $\!\!-15.55$ & $\enskip20.24$ \\ 
-##   $\!\!-25.88$ & $\enskip\!\!-6.05$ \\ 
-##    \bottomrule \end{tabularx}"))
-##     data(morley)
-##     test_that("booktabs executes at all", {
-##       expect_that(booktabs(morley), is_a("character"))
-##     })
+
+    test_that("Columns that are labeled 'numberformat' are formatted", {
+      d <- data.frame(x = c(-1.324, 0.93), y = c(10.443, 1.235))
+      expect_that(booktabs(d, numberformat = TRUE, purgeduplicates = FALSE, digits = 2, align = "c"),
+                  prints_text("\\$\\\\\\\\\\!\\\\\\\\\\!-1.32\\$ & \\$10.44\\$"))
+      expect_that(booktabs(d, numberformat = TRUE, purgeduplicates = FALSE, digits = 2, align = "c"),
+                  prints_text("\\$\\\\\\\\enskip0.93\\$ & \\$\\\\\\\\enskip1.24\\$"))
+    })
 @
 }
 
