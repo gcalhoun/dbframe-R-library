@@ -1,5 +1,5 @@
 package := dbframe
-version := 0.2.2-a
+version := 0.2.2
 zipfile := $(package)_$(version).tar.gz
 
 R        := R
@@ -51,5 +51,6 @@ $(package)/DESCRIPTION: DESCRIPTION
 	echo 'Version: $(version)' | cat $< - > $@
 
 check: $(files) $(package)/NAMESPACE
+	cp README.org $(package)/README
 	$(R) CMD check $(package)
 	touch $@
