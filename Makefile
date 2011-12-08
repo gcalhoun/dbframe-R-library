@@ -23,11 +23,14 @@ Rtests  := $(Rsource:$(sourcedir)/%.rw=$(package)/inst/tests/test-%.R)
 
 files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(pkgfiles)
 
-.PHONY: all check burn files
+.PHONY: all check burn files clean
 
 all: check
 
-burn: 
+clean: 
+	rm misc/*~ $(pkgfilesdir)/*~ $(sourcedir)/*~ tests/*~ *~
+
+burn: burn
 	rm $(package) $(package).Rcheck
 
 files: $(files)
