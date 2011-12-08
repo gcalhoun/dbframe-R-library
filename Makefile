@@ -32,8 +32,8 @@ all: check
 clean: 
 	rm misc/*~ $(pkgfilesdir)/*~ $(sourcedir)/*~ tests/*~ *~
 
-burn: burn
-	rm $(package) $(package).Rcheck
+burn: clean
+	rm -rf $(package) $(package).Rcheck
 
 files: $(files)
 
