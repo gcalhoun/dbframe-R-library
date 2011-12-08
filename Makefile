@@ -30,10 +30,10 @@ files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(pkgfiles) $(Rcopy)
 all: check
 
 clean: 
-	rm misc/*~ $(pkgfilesdir)/*~ $(sourcedir)/*~ tests/*~ *~
+	rm -f misc/*~ $(pkgfilesdir)/*~ $(sourcedir)/*~ tests/*~ *~
 
 burn: clean
-	rm -rf $(package) $(package).Rcheck
+	rm -rf $(package) $(package).Rcheck $(package)_*
 
 files: $(files)
 
