@@ -1,16 +1,18 @@
 package := dbframe
-version := 0.2.3
-zipfile := $(package)_$(version).tar.gz
 
 R        := R
 latexmk  := latexmk
 noweave  := noweave
 notangle := notangle
-tord     := ./$(package)/shell/tord
+tord     := ~/Desktop/illiterate.bzr/tord
 
 LATEXMKFLAGS := -pdf -silent
 
-sourcedir := $(package)/rw
+sourcedir   := source
+pkgfilesdir := pkgfiles
+
+pkgfiles    := $(addprefix $(package)/,DESCRIPTION NAMESPACE NEWS README.org)
+
 Rsource := $(wildcard $(sourcedir)/*.rw) 
 Rsource2:= $(wildcard $(sourcedir)/*.Rd)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
@@ -19,15 +21,14 @@ Rdocs   := $(Rsource:$(sourcedir)/%.rw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(sourcedir)/%=$(package)/man/%)
 Rtests  := $(Rsource:$(sourcedir)/%.rw=$(package)/inst/tests/test-%.R)
 
-files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(package)/DESCRIPTION
+files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(pkgfiles)
 
-.PHONY: all burn files
+.PHONY: all check burn files
 
 all: check
-$(package).Rcheck/$(package)-manual.pdf: check
 
 burn: 
-	rm $(package)/man/* $(package)/R/* $(package)/inst/tests/*
+	rm $(package) $(package).Rcheck
 
 files: $(files)
 
@@ -35,9 +36,9 @@ $(Rtests): $(package)/inst/tests/test-%.R:$(sourcedir)/%.rw
 	mkdir -p $(package)/inst/tests
 	$(notangle) -R$(@F) $< | cpif $@
 
-$(Rcode): $(package)/R/%.R: $(sourcedir)/%.rw
+$(Rcode): $(package)/R/%.R: $(sourcedir)/%.rw misc/license-boilerplate.txt
 	mkdir -p $(package)/R
-	$(notangle) $< | cat license-boilerplate.txt - | cpif $@
+	$(notangle) $< | cat misc/license-boilerplate.txt - | cpif $@
 
 $(Rdocs): $(package)/man/%.Rd: $(sourcedir)/%.rw
 	mkdir -p $(package)/man
@@ -47,10 +48,22 @@ $(Rdocs2): $(package)/man/%: $(sourcedir)/%
 	mkdir -p $(package)/man
 	cp $< $@
 
-$(package)/DESCRIPTION: DESCRIPTION
-	echo 'Version: $(version)' | cat $< - > $@
+$(package)/tests/dbframe-package.R: tests/dbframe-package.R
+	mkdir -p $(@D)
+	cp $< $(@D)
 
-check: $(files) $(package)/NAMESPACE
-	cp README.org $(package)/README
+$(package)/NEWS: NEWS
+	mkdir -p $(@D)
+	cp $< $(package)
+$(package)/DESCRIPTION: $(pkgfilesdir)/DESCRIPTION
+	mkdir -p $(@D)
+	cp $< $(package)
+$(package)/README.org: README.org
+	mkdir -p $(@D)
+	cp $< $(package)
+$(package)/NAMESPACE: $(pkgfilesdir)/NAMESPACE
+	mkdir -p $(@D)
+	cp $< $(package)
+
+check: $(files) $(pkgfiles) $(package)/tests/dbframe-package.R
 	$(R) CMD check $(package)
-	touch $@
