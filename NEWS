@@ -1,3 +1,7 @@
+version 0.2.4:
+
+* Large reorganization of directory structure (again)
+
 version 0.2.3:
 
 * Fixed bug in booktabs: formatting the first column of a data frame

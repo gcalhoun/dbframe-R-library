@@ -20,10 +20,13 @@ dbframe -- an R to SQL interface
   See the package documentation (available as a pdf download from
   github) for details of the functions defined by this package.
 * Installation
-  Installation is a little trickier than it is for most R libraries;
-  this package is a "literate program," meaning that the documentation
-  and the code are marked up in the files "dbframe/source/*.rw".  The
-  "noweb" program parses those files and 
+  You can download a 'source' R package from github, R-forge, or
+  http://www.econ.iastate.com/~gcalhoun which is installed as usual.
+
+  Installation from the original source code is a little trickier.
+  This package is a "literate program," meaning that the documentation
+  and the code are marked up in the files "dbframe/rw/*.rw".  The
+  "noweb" program parses those files and
 
   - writes the code to .R files in the folder "dbframe/R"
   - writes the documentation to .Rd files in the filder "dbframe/man"
@@ -32,13 +35,11 @@ dbframe -- an R to SQL interface
 
   Noweb can be downloaded at http://www.cs.tufts.edu/~nr/noweb/
 
-  If you have noweb installed, typing 'make' will generate these files
-  and then check the package for errors.  You may need to change some
-  of the paths to binaries on your system.  Noweb just converts the
-  .rw files to .Rd files for the documentation, using the shell script
-  provided in this package which is minor modification of the totex
-  script provided by noweb.
+  You also need the backend file 'tord' that can be downloaded at
+  http://www.econ.iastate.edu/~gcalhoun
 
-  If you're just interested in trying out the package, it might be
-  easiest to download a compressed archive of the full (post makefile)
-  package from the downloads page.
+  If you have noweb and tord installed, typing 'make' will generate
+  the R/, man/ files and the individual tests and then check the
+  package for errors.  You may need to change some of the paths to
+  binaries on your system.  After that, you can install the package as
+  usual.
