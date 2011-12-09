@@ -1,3 +1,6 @@
+* Adds a check to booktabs: warn if 'drop' lists columns not in 
+  the data frame.
+
 version 0.2.4:
 
 * Large reorganization of directory structure (again)

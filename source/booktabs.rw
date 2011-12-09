@@ -102,8 +102,13 @@ The user can choose to leave out some of the columns.  This can be
 useful if there are columns that are important for sorting the data
 frame, but are not of interest on their own.
 <<Drop user-specified columns>>=
-    if (!is.null(drop)) 
+    if (!is.null(drop)) {
+      columnnames <- names(dframe)
+      if (!all(drop %in% columnnames)) {
+        warning("'drop' contains some columns not in 'dframe'")
+      }
       dframe <- dframe[, setdiff(names(dframe), drop), drop = FALSE]
+    }
 @ 
 
 For conveneince, we let arguments that affect column-by-column
@@ -170,6 +175,11 @@ Finally, we remove duplicates in a slightly clever way
       expect_that(booktabs(d, numberformat = TRUE,
                            purgeduplicates = FALSE, digits = 2, align = "c"),
         prints_text("\\$\\\\\\\\enskip0.93\\$ & \\$\\\\\\\\enskip1.24\\$"))
+    })
+
+    test_that("Argument checking works as expected", {
+      expect_that(booktabs(longley, drop = "WXYZ"),
+        gives_warning("'drop' contains some columns not in 'dframe'"))
     })
 @
 }
