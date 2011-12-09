@@ -211,13 +211,14 @@ If [[cols]] is "missing" it returns results for
         arguments$readonly <- NULL
       }
       d <- do.call("new", c(Class = "dbframe", table = sql.statement,
-                            readonly = readonly, dbConnect.arguments = arguments))
+                   readonly = readonly, dbConnect.arguments = arguments))
     }
     return(d)
 @
 
 <<Handle arguments and set up the local environment>>=
-    if (!as.data.frame) warning("'select' will return a data.frame when called on a data.frame.  I'm ignoring your argument.")
+    if (!as.data.frame)
+      warning("'as.data.frame' ignored when selecte is called on a data.frame.")
     tablename <- "dataframe"
     require(RSQLite)
     require(RSQLite.extfuns)
@@ -294,7 +295,8 @@ select(chicksdb, c(averageweight = "avg(weight)"), group.by = "feed",
        having = "averageweight > 250")
 
 ## and an example of querying the data frame directly
-select(chickwts, c(averageweight = "avg(weight)"), group.by = c(thefeed = "feed"))
+select(chickwts, c(averageweight = "avg(weight)"), 
+       group.by = c(thefeed = "feed"))
 }
 
 \keyword{methods}
