@@ -4,7 +4,7 @@ R        := R
 latexmk  := latexmk
 noweave  := noweave
 notangle := notangle
-tord     := ~/Desktop/illiterate.bzr/tord
+tord     := ~/Desktop/illiterate.git/tord
 
 LATEXMKFLAGS := -pdf -silent
 
