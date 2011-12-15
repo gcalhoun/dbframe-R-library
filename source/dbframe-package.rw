@@ -53,7 +53,7 @@
   \subsection{Notes on implementation}{I'm attempting to make this
     package a literate program (Knuth, 1984).  That means that the
     source code is embedded in the documentation.  The
-    \dQuote{impementation} section of each help page presents and
+    \dQuote{implementation} section of each help page presents and
     discusses the source code for its functions.  Right now, the
     formatting is pretty rudimentary, but I hope to improve the
     appearance at some point.}
@@ -82,4 +82,5 @@ unlink(filename)
 \keyword{database}
 
 %  LocalWords:  dbframe docType SQL dbSendQuery dataframe dQuote eg DBI seealso
-%  LocalWords:  RSQLite
+%  LocalWords:  RSQLite newcommand sql sqlite ite workflow emph filename dbname
+ LocalWords:  tempfile fileext chickwts
