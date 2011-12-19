@@ -1,3 +1,4 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
 % Copyright (C) 2011  Gray Calhoun
 
 % This program is free software: you can redistribute it and/or modify
@@ -14,14 +15,16 @@
 % along with this program.  If not, see
 % <http://www.gnu.org/licenses/>.
 
+\newcommand{\sql}{\acronym{sql}}
+\newcommand{\sqlite}{\acronym{sql}ite}
+
 \name{dbframe-package}
 \alias{dbframe-package}
 \docType{package}
 \title{An overview of the dbframe package}
-\newcommand{\sql}{\acronym{sql}}
-\newcommand{\sqlite}{\acronym{sql}ite}
 
-\description{This package and documentation are very much under
+\description{
+  This package and documentation are very much under
   development.  Right now, it only provides an interface with \sqlite
   databases and has untested code that will try to guess the right
   interface for other databases.  The function \code{dbframe} creates a
@@ -80,7 +83,3 @@ unlink(filename)
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 \keyword{package}
 \keyword{database}
-
-%  LocalWords:  dbframe docType SQL dbSendQuery dataframe dQuote eg DBI seealso
-%  LocalWords:  RSQLite newcommand sql sqlite ite workflow emph filename dbname
- LocalWords:  tempfile fileext chickwts
