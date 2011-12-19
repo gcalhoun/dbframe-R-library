@@ -111,13 +111,13 @@ done by [[generate.select.sql]].
                 <<Execute the query and return its results>>
               })
 
-    setMethod("select", signature = c("dbframe", "list"), 
-              function(x, cols,...) {
-                <<Handle lists of a single query element>>
-                <<Manage arguments for compound queries>>
-                <<Construct individual SQL select statements for compound queries>>
-                <<Execute query and return data>>
-              })
+    ## setMethod("select", signature = c("dbframe", "list"), 
+    ##           function(x, cols,...) {
+    ##             <<Handle lists of a single query element>>
+    ##             <<Manage arguments for compound queries>>
+    ##             <<Construct individual SQL select statements for compound queries>>
+    ##             <<Execute query and return data>>
+    ##           })
       
       
     <<Define additional useful functions>>
@@ -262,8 +262,7 @@ If [[cols]] is "missing" it returns results for
   \sqlite data bases and for data.frames. 
 <<Detect inappropriate uses of the "list" method>>=
     if (length(x) == 1) return(select(x[[1]], cols,...))
-    if (is.null(names(x)))
-    stop("If 'x' is a list, it must specify names (aliases) for each element")
+    if (is.null(names(x))) names(x) <- LETTERS[seq_along(x)]
     tableclasses <- sapply(x, class)
     if (!all(tableclasses %in% c("dbframe_sqlite", "data.frame")))
       stop("Some of your dbframes aren't supported yet")
@@ -275,20 +274,20 @@ in different databases.  If all of the dbframes link to the same
 database, then that one will obviously be the main database; otherwise
 we connect to a temporary \sqlite database and attach everything there.
 <<Define and attach to "main" db>>=
-    dbnames <- rep(NA, length(x))
-    tablenames <- rep(NA, length(x))
+    dbnames <- tablenames <- rep(NA, length(x))
     for (s in seq_along(x)) {
       if (tableclasses[s] == "dbframe_sqlite") {
         dbnames[s] <- dbname(x[[s]])
         tablenames[s] <- tablename(x[[s]])
       } else {
         dbnames[s] <- "main"
-        tablenames[s] <- sprintf("df%d", s)
+        tablenames[s] <- names(x)[[s]]
       }
     }
-    if (isTRUE(sum(unique(dbnames)) == 1)) {
+    if (isTRUE(sum(!duplicated(dbnames)) == 1)) {
       maindbc <- dbConnect(x[[1]])
       dbnames <- rep("main", length(x))
+      dbalias <- dbnames
     } else {
       maindbc <- dbConnect("SQLite", dbname = ":memory:")
       <<Write dataframes to the main db>>
@@ -298,17 +297,22 @@ we connect to a temporary \sqlite database and attach everything there.
 Any data frames are just going to be written to the temporary database.
 <<Write dataframes to the main db>>=
     for (s in which(tableclasses == "data.frame")) {
-      dbWriteTable(maindbc, sprintf("df%d %s", s, names(x)[[s]]), x[[s]])
+      dbWriteTable(maindbc, names(x)[[s]], x[[s]], row.names = FALSE)
     }
 @ 
 Tables that already exist in other databases are attached to the
 temporary database.
 <<Attach sqlite_dbframes to the main db>>=
+    dbalias <- dbnames
+    dbcount <- 0
     unique.databases <- unique(dbnames[dbnames != "main"])
     for (db in unique.databases) {
-      r <- dbSendQuery(dbc, sprintf("attach database '%s'", db))
+      dbcount <- dbcount + 1
+      currentalias <- sprintf("ALIAS%d", dbcount)
+      dbalias[dbalias == db] <- currentalias
+      r <- dbSendQuery(maindbc, sprintf("attach database '%s' as %s", db, currentalias))
       dbClearResult(r)
-    }
+    } 
 @ 
 The columns are already specified for the query; the only thing to do is
 assemble the \sql code for the "table" part.
@@ -326,77 +330,16 @@ one) of those arguments must be specified.
     arguments$on    <- NULL
     arguments$using <- NULL
     arguments$cols  <- cols
-    arguments$table <- 
-      paste(c(tablenames[1], dbnames[1], names(x)[1],
-        sprintf("%s join %s.%s %s", join, tablenames[-1], dbnames[-1], names(x)[-1])
-        ifelse(is.na(on), sprintf("using(%s)", using), sprintf("on %s", on))))
+    arguments$table <- paste(collapse = " ", c(
+      sprintf("%s.%s %s", dbalias[1], tablenames[1], names(x)[1]),
+      sprintf("%s join %s.%s %s %s", join, dbalias[-1], tablenames[-1], names(x)[-1], 
+                ifelse(is.na(on), sprintf("using(%s)", using), sprintf("on %s", on)))))
 @ 
 Actually executing the query is the same as for the other methods.
 We're not going to worry about detaching the tables explicitly, since we
 know that they were only attached if we're using a temporary data base.
 <<Execute the query and return its results>>=
     return(dbGetQuery(maindbc, do.call(generate.select.sql, arguments)))
-@ 
-}
-\subsection{Details of argument handling for compound queries}{
-<<Handle lists of a single query element>>=
-  if (length(cols) == 1) return(select(x, cols[[1]],...))
-@ 
-
-<<Manage arguments for compound queries>>=
-    allargs <- list(...)
-    comp <- extract.element("comp", "union all", length(cols) - 1, allargs)
-    allargs$comp <- NULL
-    <<Deal with compound "order by">>
-    <<Deal with compound "limit">>
-    <<Deal with compound "cols">>
-@ 
-
-<<Deal with compound "order by">>=
-    if ("order.by" %in% names(allargs)) {
-      ordertext <- paste(" order by ", paste(allargs[["order.by"]], collapse = ", "))
-      allargs[["order.by"]] <- NULL
-    } else {
-      ordertext <- ""
-    }
-@ 
-
-If 'limit' has more than one entry, we'll apply it to each of the
-individual queries, otherwise we apply it at the end.
-<<Deal with compound "limit">>=
-  eachlimit <- vector("list", length(cols))
-  limtext <- ""
-  if ("limit" %in% names(allargs)) {
-    if (length(allargs[["limit"]]) > 1) {
-      if (length(allargs[["limit"]]) != length(cols))
-        stop("'limit' must have the same length as 'cols' or length 1")
-      eachlimit <- as.list(allargs[["limit"]])
-    } else {
-      limtext <- paste(" limit ", allargs[["limit"]])
-    }
-    allargs[["limit"]] <- NULL
-  }
-@ 
-
-<<Deal with compound "cols">>=
-    if (!all(sapply(cols, is.character)))
-      stop("All elements of 'cols' must be characters")
-@ 
-
-<<Construct individual SQL select statements for compound queries>>=
-    sqls <- sapply(seq_along(cols), function(j) {
-      allargs$tablesql <- sql(x)
-      allargs$cols <- cols[[j]]
-      allargs$limit <- eachlimit[[j]]
-      do.call(selectSQL, allargs)
-    })
-@ 
-
-<<Execute query and return data>>=
-    dbc <- dbConnect(x)
-    d <- dbGetQuery(dbc, paste(paste(sqls, c(comp, ""), collapse = " "), ordertext, limtext))
-    dbDisconnect(dbc)
-    return(d)
 @ 
 }
 \subsection{Miscellaneous function}{
@@ -435,6 +378,8 @@ functions run at a minimal level.
       <<Individual tests that insert and select work>>})
     test_that("column renaming scheme works", {
       <<Individual tests that column renaming works>>})
+    test_that("joins work", {
+      <<Individual tests that joins work>>})
 @ 
 
 First we'll check that the methods defined on data frames work, then
@@ -460,6 +405,11 @@ that they work for dbframes.
            c(AverageWeight = "avg(weight)"), group.by = "feed"))))
     <<Remove temporary test database>>
 @ 
+
+<<Individual tests that joins work>>=
+##    select(list(chickwts, chickwts), using = "feed")
+  
+@
 
 <<Create temporary test database and dbframe>>=
     testdbfile <- tempfile(fileext = ".db")    
@@ -488,6 +438,9 @@ select(chickwts, c(averageweight = "avg(weight)"),
 avgwts <- dbframe("select2", dbname = filename, clear = TRUE,
                   data = select(chickwts, c(averageweight = "avg(weight)"), 
                                 group.by = c(thefeed = "feed")))
+## an example of a join
+select(list(a = chickwts, b = avgwts), c("feed", "weight", "averageweight"),
+       on = ("feed = thefeed"))
 }
 
 \keyword{methods}
