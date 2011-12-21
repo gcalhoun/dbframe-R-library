@@ -66,7 +66,7 @@ generate.select.sql(table, cols = "*", where = NULL, group.by = NULL,
 \references{
 \sql as understood by \sqlite. \url{http://www.sqlite.org/lang_select.html}
 }
-\section{Implementation}{
+\section{Source code}{
 The inidividual methods do some minor parsing, but most of the work is
 done by [[generate.select.sql]].
   
@@ -113,10 +113,10 @@ done by [[generate.select.sql]].
 
     ## setMethod("select", signature = c("dbframe", "list"), 
     ##           function(x, cols,...) {
-    ##             <<Handle lists of a single query element>>
-    ##             <<Manage arguments for compound queries>>
-    ##             <<Construct individual SQL select statements for compound queries>>
-    ##             <<Execute query and return data>>
+    ##             <Handle lists of a single query element>>
+    ##             <Manage arguments for compound queries>>
+    ##             <Construct individual SQL select statements for compound queries>>
+    ##             <Execute query and return data>>
     ##           })
       
       
@@ -266,6 +266,10 @@ If [[cols]] is "missing" it returns results for
     tableclasses <- sapply(x, class)
     if (!all(tableclasses %in% c("dbframe_sqlite", "data.frame")))
       stop("Some of your dbframes aren't supported yet")
+    if (any(tableclasses == "data.frame")) {
+      require(RSQLite)
+      require(RSQLite.extfuns)
+    }
 @ 
 
 One nice feature of this function is that it handles all of the
@@ -280,32 +284,33 @@ we connect to a temporary \sqlite database and attach everything there.
         dbnames[s] <- dbname(x[[s]])
         tablenames[s] <- tablename(x[[s]])
       } else {
-        dbnames[s] <- "main"
+        dbnames[s] <- "temp"
         tablenames[s] <- names(x)[[s]]
       }
     }
-    if (isTRUE(sum(!duplicated(dbnames)) == 1)) {
-      maindbc <- dbConnect(x[[1]])
-      dbnames <- rep("main", length(x))
-      dbalias <- dbnames
+    not.data.frames <- which(tableclasses != "data.frame")
+    dbalias <- dbnames
+    if (isTRUE(sum(!duplicated(dbnames[not.data.frames])) == 1)) {
+      maindbc <- dbConnect(x[[not.data.frames[1]]])
+      dbnames[not.data.frames] <- "main"
+      dbalias[not.data.frames] <- "main"
     } else {
       maindbc <- dbConnect("SQLite", dbname = ":memory:")
-      <<Write dataframes to the main db>>
       <<Attach sqlite_dbframes to the main db>> 
     }
+    <<Write dataframes to the main db>>
 @ 
 Any data frames are just going to be written to the temporary database.
 <<Write dataframes to the main db>>=
-    for (s in which(tableclasses == "data.frame")) {
-      dbWriteTable(maindbc, names(x)[[s]], x[[s]], row.names = FALSE)
-    }
+    sapply(which(tableclasses == "data.frame"), function(s) 
+           dbWriteTable(maindbc, paste("temp", tablenames[s], sep = "."),
+                                                      x[[s]], row.names = FALSE))
 @ 
 Tables that already exist in other databases are attached to the
 temporary database.
 <<Attach sqlite_dbframes to the main db>>=
-    dbalias <- dbnames
     dbcount <- 0
-    unique.databases <- unique(dbnames[dbnames != "main"])
+    unique.databases <- unique(dbnames[!(dbnames %in% c("temp", "main"))])
     for (db in unique.databases) {
       dbcount <- dbcount + 1
       currentalias <- sprintf("ALIAS%d", dbcount)
@@ -324,7 +329,7 @@ one) of those arguments must be specified.
     join  <- extract.element("join", "inner", length(x) - 1, arguments)
     on    <- extract.element("on", NA, length(x) - 1, arguments)
     using <- extract.element("using", NA, length(x) - 1, arguments)
-    if (!all(xor(is.na(on), is.na(using))))
+    if (any(is.na(on) & is.na(using)))
       stop("'on' and 'using' can't both be specified for the same join.")
     arguments$join  <- NULL
     arguments$on    <- NULL
@@ -332,39 +337,29 @@ one) of those arguments must be specified.
     arguments$cols  <- cols
     arguments$table <- paste(collapse = " ", c(
       sprintf("%s.%s %s", dbalias[1], tablenames[1], names(x)[1]),
-      sprintf("%s join %s.%s %s %s", join, dbalias[-1], tablenames[-1], names(x)[-1], 
-                ifelse(is.na(on), sprintf("using(%s)", using), sprintf("on %s", on)))))
+      sprintf("%s join %s.%s %s %s", join, dbalias[-1], tablenames[-1], 
+                                                                   names(x)[-1],
+              ifelse(is.na(on), ifelse(is.na(using), "", 
+                          sprintf("using(%s)", using)), sprintf("on %s", on)))))
 @ 
 Actually executing the query is the same as for the other methods.
 We're not going to worry about detaching the tables explicitly, since we
 know that they were only attached if we're using a temporary data base.
 <<Execute the query and return its results>>=
-    return(dbGetQuery(maindbc, do.call(generate.select.sql, arguments)))
+    results <- dbGetQuery(maindbc, do.call(generate.select.sql, arguments))
+    dbDisconnect(maindbc)
+    return(results)
 @ 
 }
 \subsection{Miscellaneous function}{
 <<Define additional useful functions>>=
-    <<Define tableSQL>>
-    <<Define extract.element>>
-@   
-
-<<Define tableSQL>>=
-    tableSQL <- function(tablenames, join, on, using) {
-    paste(tablenames[1], names(tablenames)[1],
-          paste(join, tablenames[-1], names(tablenames)[-1], 
-                c(ifelse(is.na(on), paste("using(", using, ")", sep = ""),
-                         paste("on", on)))))
-	  	       }
-@ 
-
-<<Define extract.element>>=
     extract.element <- function(name, default, length.required, argument.list) {
       v <- if (name %in% names(argument.list)) argument.list[[name]] else default
       if (is.na(length.required) | length(v) == length.required) return(v)
       else if (length(v) == 1) return(rep(v, length.required))
       else stop("Incorrect length of argument")
     }
-@ 
+@   
 }}
 
 \section{Unit Tests}{
@@ -407,8 +402,30 @@ that they work for dbframes.
 @ 
 
 <<Individual tests that joins work>>=
-##    select(list(chickwts, chickwts), using = "feed")
-  
+    <<Create temporary test database and dbframe>>
+    expect_that(select(list(A = chickwts,B =  chickwts), 
+                    c("feed", weightA = "A.weight", weightB = "B.weight"), 
+                    using = "feed", order.by = c("feed", "weightA", "weightB")),
+                equals({
+                  d <- merge(chickwts, chickwts, by = "feed", 
+                                                         suffixes = c("A", "B"))
+                  d$feed <- as.character(d$feed)
+                  d[do.call(order, d),]
+                }, check.attributes = FALSE))
+
+    avgwts <- dbframe("select2", dbname = testdbfile, clear = TRUE,
+                       data = select(chickwts, c(averageweight = "avg(weight)"),
+                                                group.by = c(thefeed = "feed")))
+    expect_that(select(list(a = chickwts, b = avgwts), 
+                       c("feed", "weight", "averageweight"),
+                       on = ("feed = thefeed"), order.by = "feed, weight"),
+                equals({
+                  d <- merge(chickwts, select(avgwts), by.x = "feed", 
+                                                               by.y = "thefeed")
+                  d$feed <- as.character(d$feed)
+                  d[do.call(order, d),]
+                }, check.attributes = FALSE))
+    <<Remove temporary test database>>
 @
 
 <<Create temporary test database and dbframe>>=
@@ -439,8 +456,8 @@ avgwts <- dbframe("select2", dbname = filename, clear = TRUE,
                   data = select(chickwts, c(averageweight = "avg(weight)"), 
                                 group.by = c(thefeed = "feed")))
 ## an example of a join
-select(list(a = chickwts, b = avgwts), c("feed", "weight", "averageweight"),
-       on = ("feed = thefeed"))
+select(list(a = chicksdb, b = avgwts), c("feed", "weight", "averageweight"),
+       on = ("feed = thefeed"), order.by = "feed, weight")
 }
 
 \keyword{methods}
