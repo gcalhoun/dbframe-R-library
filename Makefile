@@ -13,7 +13,7 @@ pkgfilesdir := pkgfiles
 
 pkgfiles    := $(addprefix $(package)/,DESCRIPTION NAMESPACE NEWS README.org)
 
-Rsource := $(wildcard $(sourcedir)/*.rw) 
+Rsource := $(wildcard $(sourcedir)/*.rw)
 Rsource2:= $(wildcard $(sourcedir)/*.Rd)
 Rcopy   := $(Rsource:$(sourcedir)/%.rw=$(package)/rw/%.rw)
 Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
@@ -21,7 +21,6 @@ Rcode   := $(filter-out $(package)/R/dbframe-package.R, \
 Rdocs   := $(Rsource:$(sourcedir)/%.rw=$(package)/man/%.Rd)
 Rdocs2  := $(Rsource2:$(sourcedir)/%=$(package)/man/%)
 Rtests  := $(Rsource:$(sourcedir)/%.rw=$(package)/inst/tests/test-%.R)
-
 
 files := $(Rcode) $(Rdocs) $(Rdocs2) $(Rtests) $(pkgfiles) $(Rcopy)
 
