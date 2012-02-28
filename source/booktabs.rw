@@ -62,30 +62,42 @@ booktabs(dframe, align = "l", digits = 1, numberformat = FALSE,
 \section{Implementation}{
 The basic implementation is straightforward.
 <<*>>=
-  booktabs <- function(dframe, align = "l", digits = 1,
+    booktabs <- function(dframe, align = "l", digits = 1,
                          numberformat = FALSE, purgeduplicates = TRUE,
                          tabular.environment = "tabularx", 
                          include.rownames = FALSE,
                          sanitize.text.function = function(x) x, 
                          drop = NULL,...) {
+      <<Define platform independent null file>>
       <<Format arguments>>
       return(<<Assemble Latex code for table>>)
-}
+    }
 @
 
 To assemple the Latex code, we just call [[xtable]] on the data frame,
-then substitute out the first line to make the table span the entire page.
+then substitute out the first line to make the table span the entire
+page.  Note that [[devnull]] is defined elsewhere in the package.
 <<Assemble Latex code for table>>=
     gsub(sprintf("\\\\begin\\{%s\\}", tabular.environment),
          sprintf("\\\\begin\\{%s\\}\\{\\\\textwidth\\}", tabular.environment),
          print(xtable(dframe, align = align, digits = digits,...),
-               file = "/dev/null", floating = FALSE,
+               file = devnull, floating = FALSE,
                add.to.row = list(pos=list(-1, 0, nrow(dframe)),
                  command = c("\\toprule ", "\\midrule ", "\\bottomrule ")),
                tabular.environment = tabular.environment,
                sanitize.text.function = sanitize.text.function,
                include.rownames = include.rownames, hline.after = NULL))
 @
+
+The variable [[devnull]] is defined to be a platform independent [[/dev/null]]:
+<<Define platform independent null file>>=
+    devnull <- switch(Sys.info()["sysname"],
+      Windows = "NUL", 
+      Linux   = "/dev/null",
+      Darwin  = "/dev/null",
+      {warning("Your OS is not explicitly supported; we'll assume /dev/null exists.")
+       "/dev/null"})
+@ 
 
 A little bit of routine reformatting needs to happen before calling [[xtable]].
 
