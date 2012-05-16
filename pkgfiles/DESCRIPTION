@@ -2,7 +2,7 @@ Package: dbframe
 Type: Package
 Title: An R to SQL interface
 Date: 2010-10-02
-Version: 0.2.4
+Version: 0.2.6
 Author: Gray Calhoun
 Depends: methods, utils, DBI, xtable
 Suggests: testthat, RSQLite, RSQLite.extfuns
