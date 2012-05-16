@@ -150,9 +150,15 @@ names aren't going to be shown.
 Columns that contain numbers are reformatted to align at the decimal
 point and use the correct minus sign.
 <<Reformat numeric columns>>=
-    dframe[,numberformat] <- lapply(which(numberformat), function (i)
-      gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
-           format(round(dframe[,i], digits[i + !include.rownames]))))))
+    dframe[,numberformat] <- lapply(which(numberformat), function (i) {
+      emptyRows <- is.na(dframe[,i])
+      rowTex <- rep("", length(emptyRows))
+      rowTex[!emptyRows] <- 
+        gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
+           format(round(as.numeric(dframe[!emptyRows,i]), 
+                        digits[i + !include.rownames])))))
+      rowTex
+    })
 @ 
 
 
