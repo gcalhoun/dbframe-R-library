@@ -23,8 +23,9 @@
   is a wrapper for [[mclapply]] just like [[replicate]] is a wrapper
   for [[sapply]].}
 \usage{
-RepParallel(n, expr, simplify = "array",...)}  
+RepParallel(n, expr, simplify = "array",...)
 }
+
 \arguments{
   \item{n}{An integer giving the number of replications to execute.}
   \item{expr}{R code to execute.}
@@ -48,5 +49,4 @@ RepParallel(n, expr, simplify = "array",...)}
       else return(answer)
     }
 @
-
-
+}
