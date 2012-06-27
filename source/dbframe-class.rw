@@ -135,10 +135,9 @@ or if it works at all.}
 	object.
 <<Define "dbConnect" method for "dbframe_sqlite">>=
     setMethod("dbConnect", signature = "dbframe_sqlite", 
-              definition = function(drv,...)
-                return(do.call("dbConnect",
-                               c(drv = "SQLite", dbname = dbname(drv), list(...),
-                                 dbConnect.arguments = drv@dbConnect.arguments))))
+      definition = function(drv,...) return(do.call("dbConnect",
+        c(drv = "SQLite", dbname = dbname(drv), list(...),
+          dbConnect.arguments = drv@dbConnect.arguments))))
 @
       }
     }

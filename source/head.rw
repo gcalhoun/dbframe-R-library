@@ -75,11 +75,13 @@ the records.
 @
 
 <<Return the last |n| records>>=
-    return(select(x, limit = sprintf("%d,%d", nrow(x) - n, n), as.data.frame = TRUE,...))
+    return(select(x, limit = sprintf("%d,%d", nrow(x) - n, n),
+                  as.data.frame = TRUE,...))
 @ 
 
 <<Return all but the first |n| records>>=
-    return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n), as.data.frame = TRUE,...))
+    return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n),
+                  as.data.frame = TRUE,...))
 @ 
 }
 

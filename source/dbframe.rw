@@ -112,8 +112,9 @@ loaded and creates a new [[dbframe_sqlite]] object.
 <<Define "dbframe_sqlite">>=
     dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
       <<Load SQLite libraries>>
-      return(new("dbframe_sqlite", table = unname(table), dbname = unname(dbname),
-                 readonly = unname(readonly), dbConnect.arguments = list(...)))
+      return(new("dbframe_sqlite", table = unname(table),
+                 dbname = unname(dbname), readonly = unname(readonly),
+                 dbConnect.arguments = list(...)))
     }
 @
 
@@ -145,7 +146,8 @@ arguments in a list so that it can pass them to [[dbConnect]] as needed.
 <<Define "dbframe_unknown">>=
     dbframe_unknown <- function(table, readonly = FALSE,...) {
       return(new("dbframe", table = unname(table), 
-                 readonly = unname(readonly), dbConnect.arguments = list(...)))
+                 readonly = unname(readonly),
+                 dbConnect.arguments = list(...)))
     }
 @ 
 }

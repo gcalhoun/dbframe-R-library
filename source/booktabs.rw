@@ -1,4 +1,4 @@
-% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+% -*- mode: noweb; noweb-default-doc-mode: Rd-mode; noweb-default-code-mode: R-mode -*-
 % Copyright (C) 2011  Gray Calhoun
 
 % This program is free software: you can redistribute it and/or modify
@@ -114,8 +114,13 @@ The user can choose to leave out some of the columns.  This can be
 useful if there are columns that are important for sorting the data
 frame, but are not of interest on their own.
 <<Drop user-specified columns>>=
-    if (!is.null(drop)) 
+    if (!is.null(drop)) {
+      columnnames <- names(dframe)
+      if (!all(drop %in% columnnames)) {
+        warning("'drop' contains some columns not in 'dframe'")
+      }
       dframe <- dframe[, setdiff(names(dframe), drop), drop = FALSE]
+    }
 @ 
 
 For conveneince, we let arguments that affect column-by-column
@@ -145,9 +150,15 @@ names aren't going to be shown.
 Columns that contain numbers are reformatted to align at the decimal
 point and use the correct minus sign.
 <<Reformat numeric columns>>=
-    dframe[,numberformat] <- lapply(which(numberformat), function (i)
-      gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
-           format(round(dframe[,i], digits[i + !include.rownames]))))))
+    dframe[,numberformat] <- lapply(which(numberformat), function (i) {
+      emptyRows <- is.na(dframe[,i])
+      rowTex <- rep("", length(emptyRows))
+      rowTex[!emptyRows] <- 
+        gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
+           format(round(as.numeric(dframe[!emptyRows,i]), 
+                        digits[i + !include.rownames])))))
+      rowTex
+    })
 @ 
 
 
@@ -176,10 +187,17 @@ Finally, we remove duplicates in a slightly clever way
 
     test_that("Columns that are labeled 'numberformat' are formatted", {
       d <- data.frame(x = c(-1.324, 0.93), y = c(10.443, 1.235))
-      expect_that(booktabs(d, numberformat = TRUE, purgeduplicates = FALSE, digits = 2, align = "c"),
-                  prints_text("\\$\\\\\\\\\\!\\\\\\\\\\!-1.32\\$ & \\$10.44\\$"))
-      expect_that(booktabs(d, numberformat = TRUE, purgeduplicates = FALSE, digits = 2, align = "c"),
-                  prints_text("\\$\\\\\\\\enskip0.93\\$ & \\$\\\\\\\\enskip1.24\\$"))
+      expect_that(booktabs(d, numberformat = TRUE, 
+                           purgeduplicates = FALSE, digits = 2, align = "c"),
+        prints_text("\\$\\\\\\\\\\!\\\\\\\\\\!-1.32\\$ & \\$10.44\\$"))
+      expect_that(booktabs(d, numberformat = TRUE,
+                           purgeduplicates = FALSE, digits = 2, align = "c"),
+        prints_text("\\$\\\\\\\\enskip0.93\\$ & \\$\\\\\\\\enskip1.24\\$"))
+    })
+
+    test_that("Argument checking works as expected", {
+      expect_that(booktabs(longley, drop = "WXYZ"),
+        gives_warning("'drop' contains some columns not in 'dframe'"))
     })
 @
 }
