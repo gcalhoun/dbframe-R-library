@@ -76,6 +76,8 @@ or if it works at all.}
     \describe{
       \item{\code{dbname}:}{Object of class \code{"character"}, the filename
 	of the associated SQLite database.}
+      \item{\code{rowid}:}{Object of class \code{"integer"}, the rowid of the
+            last value inserted into the table.}
     }
   }
 }
@@ -140,6 +142,21 @@ or if it works at all.}
           dbConnect.arguments = drv@dbConnect.arguments))))
 @
       }
+      \item{rowid}{\code{signature(x = "dbframe_sqlite")}: Returns the
+          rowid associated with the last insert.
+<<Define "rowid" method>>=
+    setMethod("rowid", signature = c("dbframe_sqlite"), 
+              function(x,...) x@rowid)
+@ 
+      }
+      \item{rowid<-}{\code{signature(x = "dbframe_sqlite")}: Assigns the
+          rowid associated with the last insert.
+<<Define "rowid<-" method>>=
+    setMethod("rowid<-", signature = c("dbframe_sqlite"), function(x,...,value) {
+      x@rowid <- as.integer(value)
+      return(x)})
+@ 
+      }
     }
   }
 }
@@ -174,7 +191,7 @@ or if it works at all.}
                                        dbConnect.arguments = "list"))
 
     setClass("dbframe_sqlite", contains = "dbframe",
-             representation(dbname = "character"))
+             representation(rowid = "integer", dbname = "character"))
 
     <<Define "dbConnect" method for "dbframe">>
     <<Define "dbConnect" method for "dbframe_sqlite">>
@@ -190,6 +207,10 @@ or if it works at all.}
     <<Define "readonly" method>>
     setGeneric("is.linked", function(x,...) standardGeneric("is.linked"))
     <<Define "is.linked" method>>
+    setGeneric("rowid", function(x,...) standardGeneric("rowid"))
+    <<Define "rowid" method>>
+    setGeneric("rowid<-", function(x,...,value) standardGeneric("rowid<-"))
+    <<Define "rowid<-" method>>
 @
 }
 
