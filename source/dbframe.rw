@@ -112,15 +112,15 @@ loaded and creates a new [[dbframe_sqlite]] object.
 <<Define "dbframe_sqlite">>=
     dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
       <<Load SQLite libraries>>
-      return(new("dbframe_sqlite", table = unname(table),
+      return(new("dbframe_sqlite", table = unname(table), rowid = integer(),
                  dbname = unname(dbname), readonly = unname(readonly),
                  dbConnect.arguments = list(...)))
     }
 @
 
 <<Define "dbframe_sqlite_temporary">>=
-    dbframe_sqlite_temporary <- function(table, dbname = ":memory:",
-                                         readonly = FALSE,...)
+    dbframe_sqlite_temporary <- 
+      function(table, dbname = ":memory:", readonly = FALSE,...)
       stop("Temporary SQLite databases aren't implemented.")
 @     
 

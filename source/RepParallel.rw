@@ -1,0 +1,52 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode -*-
+% Copyright (C) 2011  Gray Calhoun
+
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+
+% This program is distributed in the hope that it will be useful, but
+% WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+% General Public License for more details.
+
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see
+% <http://www.gnu.org/licenses/>.
+
+\name{RepParallel}
+\alias{RepParallel}
+
+\title{Parallel version of \code{replicate}}
+\description{A simple parallel clone of [[replicate]]; this function
+  is a wrapper for [[mclapply]] just like [[replicate]] is a wrapper
+  for [[sapply]].}
+\usage{
+RepParallel(n, expr, simplify = "array",...)
+}
+
+\arguments{
+  \item{n}{An integer giving the number of replications to execute.}
+  \item{expr}{R code to execute.}
+  \item{simplify}{logical or character string; should the result be simplified
+          to a vector, matrix or higher dimensional array if possible?}
+  \item{\dots}{Optional arguments to [[mclapply]].}
+}
+
+\value{Just as in replicate.}
+\author{Gray Calhoun \email{gcalhoun@iastate.edu}}
+
+\seealso{\code{\link{replicate}}, \code{\link{mclapply}}}
+
+\section{Implementation}{
+<<*>>=
+    RepParallel <- function(n, expr, simplify = "array",...) {
+      answer <-
+        mclapply(integer(n), eval.parent(substitute(function(...) expr)),...)
+      if (!identical(simplify, FALSE) && length(answer)) 
+        return(simplify2array(answer, higher = (simplify == "array")))
+      else return(answer)
+    }
+@
+}

@@ -59,7 +59,7 @@ the second method shouldn't open and close the database connection.
       stopifnot(!readonly(x))
       dbc <- dbConnect(x)
       <<Determine whether the table exists>>
-      <<Write to database and disconnect>>
+      <<Write to database and store rowid>>
       dbDisconnect(dbc)
       return(x)
     })
@@ -85,9 +85,10 @@ Writing to the database is straightforward---we just use the
 frame [[value]] are rearranged to agree with the table in the
 database automatically by indexing [[value]] with the vector
 [[cols]] determined above.
-<<Write to database and disconnect>>=
+<<Write to database and store rowid>>=
     dbWriteTable(dbc, tablename(x), value[, cols, drop=FALSE],
                  row.names = FALSE, overwrite = FALSE, append = TRUE,...)
+    rowid(x) <- unname(unlist(dbGetQuery(dbc, "select last_insert_rowid();")))
 @
 }
 
