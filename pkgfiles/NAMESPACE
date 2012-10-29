@@ -1,4 +1,4 @@
-export(booktabs, clear, dbframe, dbname,
+export(booktabs, clear, dbframe, dbname, rowid, "rowid<-",
        "insert<-", readonly, rows, select, tablename)
 exportClasses(dbframe, dbframe_sqlite)
 
