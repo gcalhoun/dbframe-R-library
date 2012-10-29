@@ -4,7 +4,7 @@ R        := R
 latexmk  := latexmk
 noweave  := noweave
 notangle := notangle
-tord     := ~/tord
+tord     := ./tord
 
 LATEXMKFLAGS := -pdf -silent
 
