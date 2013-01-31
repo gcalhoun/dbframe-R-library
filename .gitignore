@@ -1,13 +1,2 @@
-auto/
-dbframe/
-*.aux
-*.log
-*.pdf
-*.tex
-*.toc
-*.dvi
-*.tar.gz
-*.Rcheck
 *~
 .Rhistory
-tord

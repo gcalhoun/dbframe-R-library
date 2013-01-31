@@ -21,3 +21,20 @@
 ##
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    head.dbframe <- function(x, n = 6L,...) {
+      if (n >= 0) {
+            return(select(x, limit = n, as.data.frame = TRUE,...))
+      } else {
+            return(select(x, limit = n + nrow(x), as.data.frame = TRUE,...))
+      }
+    }
+
+    tail.dbframe <- function(x, n = 6L,...) {
+      if (n >= 0) {
+            return(select(x, limit = sprintf("%d,%d", nrow(x) - n, n),
+                          as.data.frame = TRUE,...))
+      } else {
+            return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n),
+                          as.data.frame = TRUE,...))
+      }
+    }
