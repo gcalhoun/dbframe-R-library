@@ -19,9 +19,9 @@
 \alias{RepParallel}
 
 \title{Parallel version of \code{replicate}}
-\description{A simple parallel clone of [[replicate]]; this function
-  is a wrapper for [[mclapply]] just like [[replicate]] is a wrapper
-  for [[sapply]].}
+\description{A simple parallel clone of \samp{replicate}; this function
+  is a wrapper for \samp{mclapply} just like \samp{replicate} is a wrapper
+  for \samp{sapply}.}
 \usage{
 RepParallel(n, expr, simplify = "array",...)
 }
@@ -31,7 +31,7 @@ RepParallel(n, expr, simplify = "array",...)
   \item{expr}{R code to execute.}
   \item{simplify}{logical or character string; should the result be simplified
           to a vector, matrix or higher dimensional array if possible?}
-  \item{\dots}{Optional arguments to [[mclapply]].}
+  \item{\dots}{Optional arguments to \samp{mclapply}.}
 }
 
 \value{Just as in replicate.}
@@ -40,13 +40,14 @@ RepParallel(n, expr, simplify = "array",...)
 \seealso{\code{\link{replicate}}, \code{\link{mclapply}}}
 
 \section{Implementation}{
-<<*>>=
-    RepParallel <- function(n, expr, simplify = "array",...) {
+\preformatted{<<*>>=
+    RepParallel <- function(n, expr, simplify = "array",...) \{
       answer <-
         mclapply(integer(n), eval.parent(substitute(function(...) expr)),...)
       if (!identical(simplify, FALSE) && length(answer)) 
         return(simplify2array(answer, higher = (simplify == "array")))
       else return(answer)
-    }
-@
+    \}
 }
+}
+

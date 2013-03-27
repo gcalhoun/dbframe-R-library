@@ -22,7 +22,7 @@
 
 \title{Retrieve head or tail of a table}
 \description{Retrieves the first or last few records from a
-  [[dbframe]].  This function mimics the corresponding data frame
+  \samp{dbframe}.  This function mimics the corresponding data frame
   methods.}
 \usage{
 \method{head}{dbframe}(x, n = 6L, \dots)
@@ -33,8 +33,8 @@
   \item{x}{A \code{dbframe} object}
   \item{n}{An integer.  If positive, the number of records to
       retrieve.  If negative, these functions will retrieve all but
-      [[n]] records.}
-  \item{\dots}{Other arguments to pass to [[select]]}
+      \samp{n} records.}
+  \item{\dots}{Other arguments to pass to \samp{select}}
 }
 
 \value{Returns a data frame with the records.}
@@ -43,55 +43,55 @@
 \seealso{\code{\link{head}}, \code{\link{tail}}, \code{\link{select}}}
 
 \section{Implementation}{
-[[head]] and [[tail]] are really basic functions; the implementation
+\samp{head} and \samp{tail} are really basic functions; the implementation
 is pretty straightforward.  The only complication is that the
 \dQuote{\ldots} arguments can be passed multiple times, so I pull them
 out and store them in a list.
-<<*>>=
-    head.dbframe <- function(x, n = 6L,...) {
-      if (n >= 0) {
+\preformatted{<<*>>=
+    head.dbframe <- function(x, n = 6L,...) \{
+      if (n >= 0) \{
         <<Return the first |n| records>>
-      } else {
+      \} else \{
         <<Return all but the last |n| records>>
-      }
-    }
+      \}
+    \}
 
-    tail.dbframe <- function(x, n = 6L,...) {
-      if (n >= 0) {
+    tail.dbframe <- function(x, n = 6L,...) \{
+      if (n >= 0) \{
         <<Return the last |n| records>>
-      } else {
+      \} else \{
         <<Return all but the first |n| records>>
-      }
-    }
-@
+      \}
+    \}
+}
 We use select statements with \dQuote{limit} and \dQuote{offset} to get
 the records.
-<<Return the first |n| records>>=
+\preformatted{<<Return the first |n| records>>=
     return(select(x, limit = n, as.data.frame = TRUE,...))
-@ 
+}
 
-<<Return all but the last |n| records>>=
+\preformatted{<<Return all but the last |n| records>>=
     return(select(x, limit = n + nrow(x), as.data.frame = TRUE,...))
-@
+}
 
-<<Return the last |n| records>>=
-    return(select(x, limit = sprintf("%d,%d", nrow(x) - n, n),
+\preformatted{<<Return the last |n| records>>=
+    return(select(x, limit = sprintf("\%d,\%d", nrow(x) - n, n),
                   as.data.frame = TRUE,...))
-@ 
+}
 
-<<Return all but the first |n| records>>=
-    return(select(x, limit = sprintf("%d,%d", -n, nrow(x) + n),
+\preformatted{<<Return all but the first |n| records>>=
+    return(select(x, limit = sprintf("\%d,\%d", -n, nrow(x) + n),
                   as.data.frame = TRUE,...))
-@ 
+}
 }
 
 \section{Unit tests}{
-<<test-head.R>>=
+\preformatted{<<test-head.R>>=
     library(testthat)
     filename <- tempfile(fileext = ".db")
 
     data(morley)
-    test_that("head and tail return the right number of records", {
+    test_that("head and tail return the right number of records", \{
       dbf <- dbframe("tab1", dbname = filename, data = morley)
       expect_that(nrow(head(dbf)), equals(6))
       expect_that(nrow(tail(dbf)), equals(6))
@@ -102,8 +102,8 @@ the records.
 
       expect_that(nrow(head(dbf, -nrec)), equals(nrow(morley) - nrec))
       expect_that(nrow(tail(dbf, -nrec)), equals(nrow(morley) - nrec))
-    })
-@ 
+    \})
+}
 }
 \examples{
 data(chickwts)
@@ -117,4 +117,5 @@ unlink(filename)
 }
 
 \keyword{database}
+
 

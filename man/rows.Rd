@@ -33,16 +33,16 @@ rows(x)
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
 
 \section{Implementation}{
-<<*>>=
-    rows <- function(x) {
+\preformatted{<<*>>=
+    rows <- function(x) \{
       x <- as.data.frame(x)
-      if (nrow(x) > 0) {
+      if (nrow(x) > 0) \{
         lapply(seq.int(nrow(x)), function(i) x[i,])
-      } else {
+      \} else \{
         list()
-      }
-    }
-@  
+      \}
+    \}
+} 
 }
 
 \examples{
@@ -50,3 +50,4 @@ data(chickwts)
 for (r in rows(head(chickwts))) print(r)
 }
 \keyword{utilities}
+

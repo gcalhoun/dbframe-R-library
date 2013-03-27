@@ -47,13 +47,13 @@
 \section{Objects from the Class}{
 Objects can be created by calls of the form
 \code{new("dbframe", ...)}, but I recommend that you use the
-constructor [[dbframe]].
+constructor \samp{dbframe}.
 
-The [[dbframe_sqlite]] class creates a link to a table in an \sqlite
-database, and [[dbframe]] acts as a superclass.
-[[dbframe_sqlite_temporary]] implements temporary \acronym{sql}ite
+The \samp{dbframe{\char95}sqlite} class creates a link to a table in an \sqlite
+database, and \samp{dbframe} acts as a superclass.
+\samp{dbframe{\char95}sqlite{\char95}temporary} implements temporary \acronym{sql}ite
 databases.  I'd like to add other classes that store links to other
-databases (i.e. My\sql and Postgre\sql) as well.  Until then, [[dbframe]]
+databases (i.e. My\sql and Postgre\sql) as well.  Until then, \samp{dbframe}
 also works as an experimental class that tries to guess how to open a
 connection to the right database---please let me know how well it works,
 or if it works at all.}
@@ -62,20 +62,20 @@ or if it works at all.}
   \subsection{\code{dbframe}}{
     \describe{
       \item{\code{dbConnect.arguments}:}{Object of class \code{"list"}, a
-	list of arguments to pass to [[dbConnect]] when it's time to
-	connect to the database.}
+        list of arguments to pass to \samp{dbConnect} when it's time to
+        connect to the database.}
       \item{\code{readonly}:}{Object of class \code{"logical"} that
-	indicates whether the user is allowed to write to the database.
-	Be careful!  This is implemented only as a safeguard against
-	carelessness; it is still very easy to write to the table.}
+        indicates whether the user is allowed to write to the database.
+        Be careful!  This is implemented only as a safeguard against
+        carelessness; it is still very easy to write to the table.}
       \item{\code{table}:}{Object of class \code{"character"}, the name
-	of the table associated with this [[dbframe]] object. }
+        of the table associated with this \samp{dbframe} object. }
     }
   }
   \subsection{Additional slots for \code{dbframe_sqlite}}{
     \describe{
       \item{\code{dbname}:}{Object of class \code{"character"}, the filename
-	of the associated SQLite database.}
+        of the associated SQLite database.}
       \item{\code{rowid}:}{Object of class \code{"integer"}, the rowid of the
             last value inserted into the table.}
     }
@@ -85,47 +85,47 @@ or if it works at all.}
   \subsection{\code{dbframe}}{
     \describe{
       \item{clear}{\code{signature(... = "dbframe")}: Remove the table
-        corresponding to the [[dbframe]] object from its database.
-        Please see the [[clear]] documentation for details.}
+        corresponding to the \samp{dbframe} object from its database.
+        Please see the \samp{clear} documentation for details.}
       \item{dbname}{\code{signature(x = "dbframe_sqlite")}: Returns the
         filename of the \sqlite database associated with the object.
-<<Define "dbname" method>>=
+\preformatted{<<Define "dbname" method>>=
     setMethod("dbname", signature = c("dbframe"), function(x) x@dbname)
-@ }
+}}
       \item{dbConnect}{\code{signature(drv = "dbframe")}:
         Establishes a connection with the database associated with the
-	object.
-<<Define "dbConnect" method for "dbframe">>=
+        object.
+\preformatted{<<Define "dbConnect" method for "dbframe">>=
     setMethod("dbConnect", signature = "dbframe", 
               definition = function(drv,...)
               do.call("dbConnect", drv@dbConnect.arguments))
-@ }
+}}
       \item{insert<-}{\code{signature(x = "dbframe")}: Insert records
-        into the [[dbframe]] table.  Please see individual
+        into the \samp{dbframe} table.  Please see individual
         documentation for details.}
       \item{readonly}{\code{signature(x = "dbframe")}: Determine whether
         the dbframe object is read-only.
-<<Define "readonly" method>>=
+\preformatted{<<Define "readonly" method>>=
     setMethod("readonly", signature = c("dbframe"), function(x) x@readonly)
-@ }
-      \item{select}{Query the [[dbframe]] table.  Please see individual
+}}
+      \item{select}{Query the \samp{dbframe} table.  Please see individual
         documentation for details.}   
       \item{tablename}{\code{signature(x = "dbframe")}: Returns the table
         name associated with the object.
-<<Define "tablename" method>>=
+\preformatted{<<Define "tablename" method>>=
     setMethod("tablename", signature = c("dbframe"), function(x) x@table)
-@
+}
       }
       \item{is.linked}{\code{signature(x = "dbframe")}: Check whether
-	the table associated with the [[dbframe]] exists.
-<<Define "is.linked" method>>=
-    setMethod("is.linked", signature = c("dbframe"), function(x,...) {
+        the table associated with the \samp{dbframe} exists.
+\preformatted{<<Define "is.linked" method>>=
+    setMethod("is.linked", signature = c("dbframe"), function(x,...) \{
       dbc <- dbConnect(x,...)
-      answer <- tablename(x) %in% dbListTables(dbc)
+      answer <- tablename(x) \%in\% dbListTables(dbc)
       dbDisconnect(dbc)
       return(answer)
-    })
-@ 
+    \})
+}
       }
     }
   }
@@ -134,28 +134,28 @@ or if it works at all.}
     \describe{
       \item{dbConnect}{\code{signature(drv = "dbframe_sqlite")}:
         Establishes a connection with the database associated with the
-	object.
-<<Define "dbConnect" method for "dbframe_sqlite">>=
+        object.
+\preformatted{<<Define "dbConnect" method for "dbframe_sqlite">>=
     setMethod("dbConnect", signature = "dbframe_sqlite", 
       definition = function(drv,...) return(do.call("dbConnect",
         c(drv = "SQLite", dbname = dbname(drv), list(...),
           dbConnect.arguments = drv@dbConnect.arguments))))
-@
+}
       }
       \item{rowid}{\code{signature(x = "dbframe_sqlite")}: Returns the
           rowid associated with the last insert.
-<<Define "rowid" method>>=
+\preformatted{<<Define "rowid" method>>=
     setMethod("rowid", signature = c("dbframe_sqlite"), 
               function(x,...) x@rowid)
-@ 
+}
       }
       \item{rowid<-}{\code{signature(x = "dbframe_sqlite")}: Assigns the
           rowid associated with the last insert.
-<<Define "rowid<-" method>>=
-    setMethod("rowid<-", signature = c("dbframe_sqlite"), function(x,...,value) {
+\preformatted{<<Define "rowid<-" method>>=
+    setMethod("rowid<-", signature = c("dbframe_sqlite"), function(x,...,value) \{
       x@rowid <- as.integer(value)
-      return(x)})
-@ 
+      return(x)\})
+}
       }
     }
   }
@@ -163,20 +163,20 @@ or if it works at all.}
 \section{S3 Methods}{
   \describe{
     \item{as.data.frame}{\code{as.data.frame.dbframe}: Coerce a
-    [[dbframe]] object to a data frame.
-<<Define "as.data.frame" method>>=
+    \samp{dbframe} object to a data frame.
+\preformatted{<<Define "as.data.frame" method>>=
     as.data.frame.dbframe <- function(x,...) select(x,...)
-@ 
+}
 }
     \item{dim}{\code{dim.dbframe}: Determine the number of
       rows and columns in a dbframe.
-<<Define "dim" method>>=
-    dim.dbframe <- function(x) {
+\preformatted{<<Define "dim" method>>=
+    dim.dbframe <- function(x) \{
       nrows <- select(x, "count(*)")[[1]]
       ncols <- length(select(x, limit = 0))
       c(nrows, ncols)
-    }
-@ 
+    \}
+}
 }}}
 
 \author{Gray Calhoun \email{gcalhoun@iastate.edu}}
@@ -184,8 +184,8 @@ or if it works at all.}
   The basic definition of these classes is straightforward.
   Individual methods are defined above; I'll define the generic
   functions here as necessary; note that the generic function for
-  [[dbConnect]] is defined in the DBI package.
-<<*>>=
+  \samp{dbConnect} is defined in the DBI package.
+\preformatted{<<*>>=
     setClass("dbframe", representation(table = "character",
                                        readonly = "logical",
                                        dbConnect.arguments = "list"))
@@ -211,7 +211,7 @@ or if it works at all.}
     <<Define "rowid" method>>
     setGeneric("rowid<-", function(x,...,value) standardGeneric("rowid<-"))
     <<Define "rowid<-" method>>
-@
+}
 }
 
 \seealso{\code{\link{dbframe}}, \code{\link{clear}},
@@ -219,3 +219,4 @@ or if it works at all.}
 
 \keyword{classes}
 \keyword{database}
+

@@ -19,8 +19,8 @@
 \alias{clear-methods}
 \alias{clear,dbframe-method}
 \title{Remove a table from the database}
-\description{The function [[clear]] removes the tables associated with
-a collection of [[dbframe]] objects from their data bases.}
+\description{The function \samp{clear} removes the tables associated with
+a collection of \samp{dbframe} objects from their data bases.}
 \usage{clear(...)}
 \arguments{\item{\dots}{Each argument listed should be a dbframe object.}}
 
@@ -29,33 +29,33 @@ a collection of [[dbframe]] objects from their data bases.}
 \details{The table is removed and not just emptied, so the column
   names and types are discarded as well.}
 \section{Implementation}{
-The first step is to define a generic [[clear]] function.  The actual
-function is a method for the [[dbframe]] class.  Methods for other
+The first step is to define a generic \samp{clear} function.  The actual
+function is a method for the \samp{dbframe} class.  Methods for other
 classes could be defined as well.
-<<*>>=
+\preformatted{<<*>>=
     setGeneric("clear", function(...)
                standardGeneric("clear"), signature = "...")
 
-    setMethod("clear", signature = "dbframe", function(...) {
+    setMethod("clear", signature = "dbframe", function(...) \{
       x <- list(...)
-      sapply(x, function(y) {
+      sapply(x, function(y) \{
         stopifnot(!readonly(y))
         dbc <- dbConnect(y)
         results <- <<Remove table referenced by "y" from database>>
         dbDisconnect(dbc)
-	results
-      })})
-@  %
+        results
+      \})\})
+} %
 Removing the table is pretty easy since we can just use methods
 defined by DBI.
-<<Remove table referenced by "y" from database>>=
+\preformatted{<<Remove table referenced by "y" from database>>=
 res <- 
-  if (is.linked(y)) {
+  if (is.linked(y)) \{
     dbRemoveTable(dbc, tablename(y),...)
-  } else {
+  \} else \{
     FALSE
-  }
-@
+  \}
+}
 }
 \examples{
 filename <- tempfile(fileext = ".db")
@@ -74,3 +74,4 @@ unlink(filename)
 \seealso{dbRemoveTable}
 \keyword{database}
 \keyword{methods}
+
