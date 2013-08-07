@@ -1,5 +1,4 @@
-% -*- mode: noweb; noweb-default-doc-mode: Rd-mode; noweb-default-code-mode: R-mode -*-
-% Copyright (C) 2011  Gray Calhoun
+% Copyright (C) 2011-2013  Gray Calhoun
 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -24,7 +23,7 @@
 \usage{
 booktabs(dframe, align = "l", digits = 1, numberformat = FALSE,
          purgeduplicates = TRUE, tabular.environment = "tabularx",
-         include.rownames = FALSE,
+         scientific = FALSE, include.rownames = FALSE,
          sanitize.text.function = function(x) x, drop = NULL,...)
 }
 
@@ -41,7 +40,9 @@ booktabs(dframe, align = "l", digits = 1, numberformat = FALSE,
     hyphens into minus signs.}
   \item{purgeduplicates}{A logical vector that labels which columns
     should have duplicate entries removed.}
-  \item{tabular.environment}{Defaults to using tabularx in Latex.}
+  \item{tabular.environment}{Defaults to using tabularx in LaTeX.}
+  \item{scientific}{FALSE unless you want to use scientific notation in
+    the tables.}
   \item{include.rownames}{Logical indicating whether should the data
   frame's rownames should be included.  Probably not.}
   \item{sanitize.text.function}{Disables escaping out backslashes, etc.

@@ -17,6 +17,7 @@
     booktabs <- function(dframe, align = "l", digits = 1,
                          numberformat = FALSE, purgeduplicates = TRUE,
                          tabular.environment = "tabularx", 
+                         scientific = FALSE,
                          include.rownames = FALSE,
                          sanitize.text.function = function(x) x, 
                          drop = NULL,...) {
@@ -50,7 +51,8 @@
                 rowTex[!emptyRows] <- 
                   gsub("-", "\\\\!\\\\!-", sprintf("$%s$", gsub(" ", "\\\\enskip", 
                      format(round(as.numeric(dframe[!emptyRows,i]), 
-                                  digits[i + !include.rownames])))))
+                                  digits[i + !include.rownames]),
+                            scientific = scientific))))
                 rowTex
               })
               repeats <- function(x) c(FALSE, x[-1] == x[seq_len(length(x) - 1)])
