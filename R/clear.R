@@ -1,26 +1,19 @@
-##  This text is pasted to the front of each R file in the package
-##  automatically.
+## Copyright (C) 2011-2013 Gray Calhoun
 ##
-##  Before editing this file, be aware that this package is generated
-##  by noweb.  All of the source code is contained in files with an
-##  ".rw" extension.  If you are reading this message in a .R file,
-##  you are not working with the original source code and any changes
-##  you make to this file may be overwritten.
-## 
-##  Copyright (C) 2011  Gray Calhoun
+## This program is free software: you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as
+## published by the Free Software Foundation, either version 3 of the
+## License, or (at your option) any later version.
 ##
-##  This program is free software: you can redistribute it and/or modify
-##  it under the terms of the GNU General Public License as published by
-##  the Free Software Foundation, either version 3 of the License, or
-##  (at your option) any later version.
+## This program is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## General Public License for more details.
 ##
-##  This program is distributed in the hope that it will be useful,
-##  but WITHOUT ANY WARRANTY; without even the implied warranty of
-##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-##  GNU General Public License for more details.
-##
-##  You should have received a copy of the GNU General Public License
-##  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see
+## <http://www.gnu.org/licenses/>.
+
     setGeneric("clear", function(...)
                standardGeneric("clear"), signature = "...")
 
