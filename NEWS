@@ -1,5 +1,38 @@
+version 0.3.3
+
+* Add flag to remove scientific notation from 'booktabs' tables.
+
+* Clean up some of the boilerplate documentation at the top of each
+  source file
+
+* Add a copy of the GPL
+
+version 0.3.2
+
+* Specifies files to ignore during installation
+
+version 0.3.1
+
+* Adds a list of files to ignore during R installation (.git, .gitignore)
+
+version 0.3.0
+
+* Moves the source code out of noweb
+
+version 0.2.7:
+
+* Adds a parallel version of 'replicate'
+
+version 0.2.6:
+
 * Adds a check to booktabs: warn if 'drop' lists columns not in 
   the data frame.
+
+* Adds 'joins'
+
+version 0.2.5:
+
+* Find the equivalent of /dev/null on non-Linux OSes
 
 version 0.2.4:
 
