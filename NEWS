@@ -1,3 +1,6 @@
+version 0.4.0
+* Convert license to MIT
+
 version 0.3.3
 
 * Add flag to remove scientific notation from 'booktabs' tables.
