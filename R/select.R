@@ -80,7 +80,7 @@
                         arguments$readonly <- NULL
                       }
                       d <- do.call("new", c(Class = "dbframe", table = sql.statement,
-                                   readonly = readonly, dbConnect.arguments = arguments))
+                                   readonly = readonly))
                     }
                     return(d)})
 
@@ -91,7 +91,7 @@
                     tablename <- "dataframe"
                     require(RSQLite)
                     require(RSQLite.extfuns)
-                    dbc <- dbConnect("SQLite", dbname = ":memory:")
+                    dbc <- dbConnect(SQLite(), dbname = ":memory:")
                     dbWriteTable(dbc, tablename, x, row.names = FALSE)
                     sql.statement <- generate.select.sql(tablename, cols,...)
                     queryresults <- dbGetQuery(dbc, sql.statement)
