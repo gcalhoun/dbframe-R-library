@@ -12,7 +12,7 @@ setClass("dbframe", representation(table = "character",
                   do.call("dbConnect", drv@dbConnect.arguments))
         setMethod("dbConnect", signature = "dbframe_sqlite", 
           definition = function(drv,...) return(do.call("dbConnect",
-            c(drv = "SQLite", dbname = dbname(drv), list(...),
+            c(drv = SQLite(), dbname = dbname(drv), list(...),
               dbConnect.arguments = drv@dbConnect.arguments))))
  
         as.data.frame.dbframe <- function(x,...) select(x,...)
