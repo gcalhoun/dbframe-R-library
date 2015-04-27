@@ -70,8 +70,7 @@
                     sql.statement <- do.call("generate.select.sql", arguments)
                     if (as.data.frame) {
                       dbc <- dbConnect(x)
-                      d <- do.call("dbGetQuery", c(conn = dbc, statement = sql.statement,
-                                                   arguments))
+                      d <- do.call("dbGetQuery", c(conn = dbc, statement = sql.statement))
                       dbDisconnect(dbc)
                     } else {
                       if (is.null(arguments$readonly)) {
