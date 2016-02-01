@@ -5,7 +5,7 @@ Date: 2010-10-02
 Version: 0.4.0
 Author: Gray Calhoun
 Depends: methods, utils, DBI, xtable
-Suggests: testthat, RSQLite, RSQLite.extfuns
+Suggests: testthat, RSQLite
 Maintainer: Gray Calhoun <gray@clhn.org>
 Description: Some code to conveniently work with databases.
 License: MIT + file LICENSE

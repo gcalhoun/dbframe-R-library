@@ -22,7 +22,6 @@
 
         dbframe_sqlite <- function(table, dbname, readonly = FALSE,...) {
               require(RSQLite)
-              require(RSQLite.extfuns)
           return(new("dbframe_sqlite", table = unname(table), rowid = integer(),
                      dbname = unname(dbname), readonly = unname(readonly),
                      dbConnect.arguments = list(...)))
